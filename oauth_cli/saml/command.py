@@ -50,9 +50,6 @@ class SAMLGetAccessTokenCommand(object):
                 stderr.write(f'ERROR: property {attribute} not set for api {self.api} in ~/.oauth-cli.ini\n')
                 exit(1)
 
-        if self.generate_verifier:
-            self.generate_code_verifier()
-
         SAMLAccessTokenCallbackhandler.callback_url = self.saml_callback_url
 
 
@@ -70,7 +67,7 @@ class SAMLGetAccessTokenCommand(object):
             'redirect_uri': self.saml_callback_url,
         }
         query_parameters = urlencode(params)
-        url = f'{saml_idp_url}?{query_parameters}'
+        url = f'{self.saml_idp_url}?{query_parameters}'
         webbrowser.open(url)
         self.accept_saml_response()
 
