@@ -7,7 +7,7 @@ dependencies = ['boto3', 'pyjwt', 'click']
 
 setup(
     name='oauth-cli',
-    version="0.2.7",
+    version="0.1.0",
     url='https://github.com/binxio/oauth-cli',
     license='Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)',
     author='Mark van Holsteijn',
