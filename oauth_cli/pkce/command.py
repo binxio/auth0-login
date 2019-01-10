@@ -1,3 +1,4 @@
+import json
 import configparser
 import hashlib
 import webbrowser
@@ -5,7 +6,7 @@ from base64 import urlsafe_b64encode
 from http.server import HTTPServer
 from os import path
 from random import getrandbits
-from sys import exit, stderr
+from sys import exit, stderr, stdout
 from urllib.parse import urlencode, urlparse
 from uuid import uuid4
 
@@ -29,6 +30,7 @@ class PKCEGetAccessTokenCommand(object):
                          'generate_verifier': False}
         self.verifier = "EYOYp0s4oatPC8GwiiQnLP6XFbbvncBGq-VDp8Zk2Xw"
         self.challenge = "DdxpBsQJdFNxBd18fOWi56wft8TNDcYEWNjEX8FiEQY"
+        self.tokens = {}
 
 
     def determine_listen_port(self):
@@ -104,3 +106,8 @@ class PKCEGetAccessTokenCommand(object):
     def run(self):
         self.read_configuration()
         self.request_authorization()
+        if self.tokens:
+            json.dump(self.tokens, stdout)
+        else:
+            logging.error('no token retrieved')
+            exit(1)

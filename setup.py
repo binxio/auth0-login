@@ -23,7 +23,7 @@ setup(
     test_suite='tests',
     entry_points={
         'console_scripts': [
-            'oauth-cli = oauth_cli:main',
+            'oauth-cli = oauth_cli.__main__:cli',
         ],
     },
     classifiers=[
