@@ -83,5 +83,9 @@ data "http" "auth0-saml-metadata" {
 }
 
 output "oauth-cli.ini" {
-  value = "\n\n[${var.auth0_domain}]\nidp_url = https://${var.auth0_domain}\nclient_id = ${auth0_client.oauth-cli.client_id}\n"
+  value = "\n[${var.auth0_domain}]\nidp_url = https://${var.auth0_domain}\nclient_id = ${auth0_client.oauth-cli.client_id}\n"
+}
+
+output "assume-role-with-saml" {
+  value = "\naws --profile ${var.aws_profile} sts assume-role-with-saml \\\n\t--role-arn ${aws_iam_role.administrator.arn} \\\n\t--principal-arn ${aws_iam_saml_provider.auth0-provider.arn} \\\n\t--saml-assertion \"$(<~/.aws/saml-response)\""
 }
