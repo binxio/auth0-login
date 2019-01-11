@@ -13,7 +13,6 @@ class SAMLGetAccessTokenCommand(object):
     def __init__(self):
         self.idp_url = setting.IDP_URL
         self.client_id = setting.CLIENT_ID
-        self.saml_response_file = path.expandvars(path.expanduser('~/.aws/saml-response'))
         self.tokens = {}
 
     @property
@@ -35,20 +34,14 @@ class SAMLGetAccessTokenCommand(object):
         httpd.server_close()
 
     def request_authorization(self):
-        params = {
-            'redirect_uri': self.callback_url,
-        }
-        query_parameters = urlencode(params)
+        query_parameters = urlencode({'redirect_uri': self.callback_url})
         webbrowser.open(f'{self.saml_idp_url}?{query_parameters}')
         self.accept_saml_response()
 
     def run(self):
         self.request_authorization()
         if self.saml_response:
-            with open(self.saml_response_file, 'w') as f:
-                logging.info(f'SAML response stored in {self.saml_response_file}')
-                f.write(self.saml_response)
-            chmod(self.saml_response_file, 0o600)
+            print(self.saml_response)
         else:
             logging.error('no SAML response retrieved')
             exit(1)

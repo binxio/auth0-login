@@ -21,19 +21,31 @@ class PKCEAccessTokenCallbackhandler(BaseHTTPRequestHandler):
                        self.log_date_time_string(),
                        fmt % args))
 
+    def write_tokens(self, tokens):
+        if 'id_token' in tokens:
+            self.wfile.write(json.dumps(jwt.decode(tokens['id_token'], verify=False), indent=2).encode('utf-8'))
+        elif 'access_token' in tokens:
+            self.wfile.write(json.dumps(jwt.decode(tokens['access_token'], verify=False), indent=2).encode('utf-8'))
+
+    def write_reply(self, msg, loglevel=logging.DEBUG):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/plain;utf-8')
+        self.end_headers()
+        self.wfile.write(msg.encode('utf-8'))
+        logging.log(loglevel, msg)
+        return
+
     def do_GET(self):
-        logging.debug('received %s', self.path)
         codes = parse_qs(urlparse(self.path).query)
-        logging.debug('codes %s', codes)
-        state = ''.join(codes.get('state', None))
+        state = ''.join(codes.get('state', []))
         if state != PKCEAccessTokenCallbackhandler.state:
             msg = f'Authentication failed! expected code for state {PKCEAccessTokenCallbackhandler.state}, received {state}.'
-            logging.error(msg)
+            self.write_reply(msg, logging.ERROR)
+            return
 
-            self.send_response(200)
-            self.send_header('Content-type', 'text/plain;utf-8')
-            self.end_headers()
-            self.wfile.write(msg.encode('utf-8'))
+        if 'error' in codes:
+            msg = f'Authentication failed! {codes}'
+            self.write_reply(msg, logging.ERROR)
             return
 
         body = {
@@ -48,13 +60,10 @@ class PKCEAccessTokenCallbackhandler(BaseHTTPRequestHandler):
         response = requests.post(PKCEAccessTokenCallbackhandler.token_url, json=body)
         logging.debug('status code %d, %s', response.status_code, response.text)
 
-        self.send_response(200)
-        self.send_header('Content-type', 'text/plain;utf-8')
-        self.end_headers()
         if response.status_code == 200:
-            self.wfile.write('Authenticated! You may close this window.'.encode('utf-8'))
+            self.write_reply('Authenticated! You may close this window.')
             tokens = response.json()
             PKCEAccessTokenCallbackhandler.handler(tokens)
-            self.wfile.write(json.dumps(jwt.decode(tokens['access_token'], verify=False), indent=2).encode('utf-8'))
+            self.write_tokens(tokens)
         else:
-            self.wfile.write(f'Authentication failed! {response.text}'.encode('utf-8'))
+            self.write_reply(f'Authentication failed! {response.text}', logging.ERROR)

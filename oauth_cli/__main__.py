@@ -1,7 +1,7 @@
 import click
 import oauth_cli
 import logging
-from oauth_cli.pkce.command import PKCEGetAccessTokenCommand
+from oauth_cli.pkce.command import PKCEGetAccessTokenCommand, PKCEGetIdTokenCommand
 from oauth_cli.saml.command import SAMLGetAccessTokenCommand
 from oauth_cli.config import setting
 
@@ -13,6 +13,7 @@ def cli(verbose, configuration):
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
     setting.SECTION = configuration
     print(setting.SECTION)
+    print(setting.CLIENT_ID)
 
 
 @cli.command('get-access-token')
@@ -23,6 +24,10 @@ def get_access_token(audience):
         cmd.audience = audience
     cmd.run()
 
+@cli.command('get-id-token')
+def get_access_token():
+    cmd = PKCEGetIdTokenCommand()
+    cmd.run()
 
 @cli.command('get-saml-token')
 def get_access_token():

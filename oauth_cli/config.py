@@ -19,7 +19,7 @@ class __Setting(object):
 
     @property
     def attributes(self) -> dict:
-        return self.config.items(self.SECTION)
+        return {v[0]: v[1] for v in self.config.items(self.SECTION)}
 
     @property
     def LISTEN_PORT(self):

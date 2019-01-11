@@ -13,12 +13,12 @@ from oauth_cli.config import setting
 from oauth_cli.pkce.callback import PKCEAccessTokenCallbackhandler
 
 
-class PKCEGetAccessTokenCommand(object):
+class PKCEGetIdTokenCommand(object):
     def __init__(self):
-        self.scope = 'profile'
         self.client_id = setting.CLIENT_ID
-        self.audience = setting.attributes.get('audience')
+        self.scope = 'profile'
         self.tokens = {}
+        self.state = str(uuid4())
 
         # TODO: bug report -> Auth0 does not accept any generated verifier/challenge.
         self.generate_verifier = False
@@ -26,16 +26,16 @@ class PKCEGetAccessTokenCommand(object):
         self.challenge = "DdxpBsQJdFNxBd18fOWi56wft8TNDcYEWNjEX8FiEQY"
 
     @property
-    def callback_uri(self):
-        return f'http://localhost:${setting.LISTEN_PORT}/callback'
+    def callback_url(self):
+        return f'http://localhost:{setting.LISTEN_PORT}/callback'
 
     @property
-    def token_uri(self):
-        return f'${setting.IDP_URL}/oauth/token'
+    def token_url(self):
+        return f'{setting.IDP_URL}/oauth/token'
 
     @property
     def authorize_url(self):
-        return f'${setting.IDP_URL}/authorize'
+        return f'{setting.IDP_URL}/authorize'
 
     def set_tokens(self, tokens):
         self.tokens = tokens
@@ -51,25 +51,24 @@ class PKCEGetAccessTokenCommand(object):
         httpd.handle_request()
         httpd.server_close()
 
-    def request_authorization(self):
-        if not self.audience:
-            logging.error('audience is required')
-            exit(1)
-
-        self.state = str(uuid4())
-        params = {
-            "audience": self.audience,
-            "scope": self.scope,
+    @property
+    def query_parameters(self):
+        return {
             "response_type": "code",
+            "scope": self.scope,
             "client_id": self.client_id,
             "code_challenge": self.challenge,
             "code_challenge_method": "S256",
             "redirect_uri": self.callback_url,
             "state": self.state
         }
-        query_parameters = urlencode(params)
-        url = f'{self.authorize_url}?{query_parameters}'
-        webbrowser.open(url)
+
+    @property
+    def url(self):
+        return self.authorize_url + '?' + urlencode(self.query_parameters);
+
+    def request_authorization(self):
+        webbrowser.open(self.url)
         self.accept_access_code()
 
     @staticmethod
@@ -83,10 +82,28 @@ class PKCEGetAccessTokenCommand(object):
         self.challenge = self.b64encode(challenge)
 
     def run(self):
-        self.read_configuration()
         self.request_authorization()
         if self.tokens:
             json.dump(self.tokens, stdout)
         else:
             logging.error('no token retrieved')
             exit(1)
+
+
+class PKCEGetAccessTokenCommand(PKCEGetIdTokenCommand):
+    def __init__(self):
+        super(PKCEGetAccessTokenCommand,self).__init__()
+        self.audience = setting.attributes.get('audience')
+
+    @property
+    def query_parameters(self):
+        result = super(PKCEGetAccessTokenCommand,self).query_parameters
+        result.update({"audience": self.audience })
+        return result
+
+
+    def run(self):
+        if not self.audience:
+            logging.error('audience is required')
+            exit(1)
+        super(PKCEGetAccessTokenCommand,self).run()

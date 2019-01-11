@@ -13,7 +13,6 @@ class SAMLAccessTokenCallbackhandler(BaseHTTPRequestHandler):
                        format % args))
 
     def do_POST(self):
-        logging.debug('Post on %s', self.path)
         length = int(self.headers.get('Content-Length'))
         body = self.rfile.read(length).decode(self.headers.get('Content-Encoding', 'utf-8'))
         logging.debug('body %s', body)

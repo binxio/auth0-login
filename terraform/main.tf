@@ -20,6 +20,7 @@ resource "auth0_client" "oauth-cli" {
   callbacks = [
     "http://localhost:12200/saml",
     "https://signin.aws.amazon.com/saml",
+    "http://localhost:12200/callback",
   ]
 
   addons = {
