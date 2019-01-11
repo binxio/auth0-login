@@ -18,8 +18,7 @@ resource "auth0_client" "oauth-cli" {
   sso                                 = true
 
   callbacks = [
-    "http://localhost:12345/saml",
-    "http://localhost:12345/callback",
+    "http://localhost:12200/saml",
     "https://signin.aws.amazon.com/saml",
   ]
 
@@ -54,14 +53,35 @@ resource "auth0_client" "oauth-cli" {
   custom_login_page_on = true
 }
 
+resource "auth0_rule" "grant-admin" {
+  name = "grant aws admin role to all from ${var.aws_profile}"
+
+  script = <<EOF
+function (user, context, callback) {
+
+  user.awsRole = '${aws_iam_role.administrator.arn},${aws_iam_saml_provider.auth0-provider.arn}';
+  user.awsRoleSession = 'admin';
+
+  context.samlConfiguration.mappings = {
+    'https://aws.amazon.com/SAML/Attributes/Role': 'awsRole',
+    'https://aws.amazon.com/SAML/Attributes/RoleSessionName': 'awsRoleSession'
+  };
+
+  callback(null, user, context);
+}
+EOF
+
+  enabled = true
+}
+
 data "http" "auth0-saml-metadata" {
   url = "https://${var.auth0_domain}/samlp/metadata/${auth0_client.oauth-cli.client_id}"
-		request_headers {
+
+  request_headers {
     "Accept" = "application/xml"
   }
 }
 
-resource "aws_iam_saml_provider" "default" {
-  name                   = "auth0-${replace(var.auth0_domain,".","-")}-provider"
-  saml_metadata_document = "${data.http.auth0-saml-metadata.body}"
+output "oauth-cli.ini" {
+  value = "\n\n[${var.auth0_domain}]\nidp_url = https://${var.auth0_domain}\nclient_id = ${auth0_client.oauth-cli.client_id}\n"
 }

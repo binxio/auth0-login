@@ -1,0 +1,43 @@
+from os import path
+from sys import exit
+import logging
+import configparser
+
+class __Setting(object):
+    def __init__(self):
+        self.config = configparser.ConfigParser()
+        self.config.read([path.expanduser(path.expandvars('~/.oauth-cli.ini')), '.oauth-cli.ini'])
+        self.__SECTION = 'DEFAULT'
+
+    @property
+    def SECTION(self):
+        return self.__SECTION
+
+    @SECTION.setter
+    def SECTION(self, section):
+        self.__SECTION = section
+
+    @property
+    def attributes(self) -> dict:
+        return self.config.items(self.SECTION)
+
+    @property
+    def LISTEN_PORT(self):
+        return self.config.getint(self.SECTION, 'listen_port', fallback=12200)
+
+    @property
+    def CLIENT_ID(self):
+        if not self.config.has_option(self.SECTION, 'client_id'):
+            logging.error('property client_id is missing from ~/.oauth-cli.ini')
+            exit(1)
+        return self.config.get(self.SECTION, 'client_id')
+
+    @property
+    def IDP_URL(self):
+        if not self.config.has_option(self.SECTION, 'idp_url'):
+            logging.error('property idl_url is missing from ~/.oauth-cli.ini')
+            exit(1)
+        return self.config.get(self.SECTION, 'idp_url')
+
+
+setting = __Setting()

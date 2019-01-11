@@ -3,7 +3,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-aws-cfn-update = "*"
+oauth-cli = {editable = true, path = "."}
 
 [dev-packages]
 

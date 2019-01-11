@@ -1,93 +1,61 @@
+import hashlib
 import json
 import logging
-import configparser
-import hashlib
 import webbrowser
 from base64 import urlsafe_b64encode
 from http.server import HTTPServer
-from os import path
 from random import getrandbits
-from sys import exit, stderr, stdout
-from urllib.parse import urlencode, urlparse
+from sys import exit, stdout
+from urllib.parse import urlencode
 from uuid import uuid4
 
+from oauth_cli.config import setting
 from oauth_cli.pkce.callback import PKCEAccessTokenCallbackhandler
 
 
 class PKCEGetAccessTokenCommand(object):
     def __init__(self):
-        self.api = "DEFAULT"
-        self.client_id = None
-        self.callback_url = None
-        self.token_url = None
-        self.authorize_url = None
-        self.audience = None
-        self.scope = None
-        self.generate_verifier = None
-        self.listen_address = None
-        self.listen_port = None
-        self.defaults = {'scope': 'profile',
-                         'listen_address': '0.0.0.0',
-                         'generate_verifier': False}
-        self.verifier = "EYOYp0s4oatPC8GwiiQnLP6XFbbvncBGq-VDp8Zk2Xw"
-        self.challenge = "DdxpBsQJdFNxBd18fOWi56wft8TNDcYEWNjEX8FiEQY"
+        self.scope = 'profile'
+        self.client_id = setting.CLIENT_ID
+        self.audience = setting.attributes.get('audience')
         self.tokens = {}
 
+        # TODO: bug report -> Auth0 does not accept any generated verifier/challenge.
+        self.generate_verifier = False
+        self.verifier = "EYOYp0s4oatPC8GwiiQnLP6XFbbvncBGq-VDp8Zk2Xw"
+        self.challenge = "DdxpBsQJdFNxBd18fOWi56wft8TNDcYEWNjEX8FiEQY"
 
-    def determine_listen_port(self):
-        result = urlparse(self.callback_url)
-        netloc = result.netloc.split(':')
-        if len(netloc) == 2:
-            self.listen_port = int(netloc[1])
-        else:
-            if result.scheme == 'http':
-                self.listen_port = 80
-            elif result.scheme == 'https':
-                self.listen_port = 443
+    @property
+    def callback_uri(self):
+        return f'http://localhost:${setting.LISTEN_PORT}/callback'
 
+    @property
+    def token_uri(self):
+        return f'${setting.IDP_URL}/oauth/token'
 
-    def read_configuration(self):
-        config = configparser.ConfigParser()
-        config.read([path.expanduser(path.expandvars('~/.oauth-cli.ini')), '.oauth-cli.ini'])
-
-        for attribute in ['client_id', 'callback_url', 'token_url', 'authorize_url', 'audience', 'scope', 'listen_address', 'listen_port', 'generate_verifier']:
-            setattr(self, attribute, config.get(self.api, attribute, fallback=self.defaults.get(attribute)))
-            if attribute == 'listen_port' and not self.listen_port:
-                self.determine_listen_port()
-            if getattr(self, attribute) is None:
-                stderr.write(f'ERROR: property {attribute} not set for api {self.api} in ~/.oauth-cli.ini\n')
-                exit(1)
-
-        if self.generate_verifier:
-            self.generate_code_verifier()
-
-        PKCEAccessTokenCallbackhandler.client_id = self.client_id
-        PKCEAccessTokenCallbackhandler.token_url = self.token_url
-        PKCEAccessTokenCallbackhandler.callback_url = self.callback_url
-        PKCEAccessTokenCallbackhandler.verifier = self.verifier
-
-    def generate_code_verifier(self):
-        verifier = bytearray(getrandbits(8) for _ in range(32))
-        challenge = hashlib.sha256(verifier).digest()
-        self.verifier = self.b64encode(verifier)
-        self.challenge = self.b64encode(challenge)
-
-    @staticmethod
-    def b64encode(s):
-        return urlsafe_b64encode(s).decode('ascii').strip("=")
-
+    @property
+    def authorize_url(self):
+        return f'${setting.IDP_URL}/authorize'
 
     def set_tokens(self, tokens):
         self.tokens = tokens
 
     def accept_access_code(self):
+        PKCEAccessTokenCallbackhandler.client_id = setting.CLIENT_ID
+        PKCEAccessTokenCallbackhandler.token_url = self.token_url
+        PKCEAccessTokenCallbackhandler.callback_url = self.callback_url
+        PKCEAccessTokenCallbackhandler.verifier = self.verifier
         PKCEAccessTokenCallbackhandler.state = self.state
-        PKCEAccessTokenCallbackhandler.handler = (lambda tokens : self.set_tokens(tokens))
-        httpd = HTTPServer((self.listen_address, self.listen_port), PKCEAccessTokenCallbackhandler)
+        PKCEAccessTokenCallbackhandler.handler = (lambda tokens: self.set_tokens(tokens))
+        httpd = HTTPServer(('0.0.0.0', setting.LISTEN_PORT), PKCEAccessTokenCallbackhandler)
         httpd.handle_request()
         httpd.server_close()
 
     def request_authorization(self):
+        if not self.audience:
+            logging.error('audience is required')
+            exit(1)
+
         self.state = str(uuid4())
         params = {
             "audience": self.audience,
@@ -103,6 +71,16 @@ class PKCEGetAccessTokenCommand(object):
         url = f'{self.authorize_url}?{query_parameters}'
         webbrowser.open(url)
         self.accept_access_code()
+
+    @staticmethod
+    def b64encode(s):
+        return urlsafe_b64encode(s).decode('ascii').strip("=")
+
+    def generate_code_verifier(self):
+        verifier = bytearray(getrandbits(8) for _ in range(32))
+        challenge = hashlib.sha256(verifier).digest()
+        self.verifier = self.b64encode(verifier)
+        self.challenge = self.b64encode(challenge)
 
     def run(self):
         self.read_configuration()

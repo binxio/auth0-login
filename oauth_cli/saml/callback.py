@@ -1,21 +1,17 @@
-import json
 import logging
-from base64 import b64decode
 from http.server import BaseHTTPRequestHandler
-from urllib.parse import parse_qs, urlparse
-
-import jwt
-import requests
+from urllib.parse import parse_qs
 
 
 class SAMLAccessTokenCallbackhandler(BaseHTTPRequestHandler):
-    handler = lambda response : print(response)
+    handler = lambda response: print(response)
 
     def log_message(self, format, *args):
         logging.debug("%s - - [%s] %s\n" %
-                            (self.client_address[0],
-                             self.log_date_time_string(),
-                             format%args))
+                      (self.client_address[0],
+                       self.log_date_time_string(),
+                       format % args))
+
     def do_POST(self):
         logging.debug('Post on %s', self.path)
         length = int(self.headers.get('Content-Length'))
