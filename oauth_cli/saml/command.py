@@ -14,6 +14,7 @@ class SAMLGetAccessTokenCommand(object):
         self.idp_url = setting.IDP_URL
         self.client_id = setting.CLIENT_ID
         self.tokens = {}
+        self.saml_response = None
 
     @property
     def saml_idp_url(self):

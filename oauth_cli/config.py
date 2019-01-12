@@ -26,6 +26,10 @@ class __Setting(object):
         return self.config.getint(self.SECTION, 'listen_port', fallback=12200)
 
     @property
+    def ROLE_DURATION(self):
+        return self.config.getint(self.SECTION, 'role_duration', fallback=3600)
+
+    @property
     def CLIENT_ID(self):
         if not self.config.has_option(self.SECTION, 'client_id'):
             logging.error('property client_id is missing from ~/.oauth-cli.ini')
