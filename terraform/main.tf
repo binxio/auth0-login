@@ -88,5 +88,5 @@ output "oauth-cli.ini" {
 }
 
 output "assume-role-with-saml" {
-  value = "\naws --profile ${var.aws_profile} sts assume-role-with-saml \\\n\t--role-arn ${aws_iam_role.administrator.arn} \\\n\t--principal-arn ${aws_iam_saml_provider.auth0-provider.arn} \\\n\t--saml-assertion \"$(<~/.aws/saml-response)\""
+  value = "\naws --profile ${var.aws_profile} sts assume-role-with-saml \\\n\t--role-arn ${aws_iam_role.administrator.arn} \\\n\t--principal-arn ${aws_iam_saml_provider.auth0-provider.arn} \\\n\t--saml-assertion \"$SAML_RESPONSE\""
 }
