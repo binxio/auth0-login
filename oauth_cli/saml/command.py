@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 import click
 
 from oauth_cli.config import setting
-from oauth_cli.saml.callback import SAMLAccessTokenCallbackhandler
+from oauth_cli.saml.callback import SAMLAccessTokenCallbackHandler
 
 
 class SAMLGetAccessTokenCommand(object):
@@ -29,9 +29,9 @@ class SAMLGetAccessTokenCommand(object):
         self.saml_response = saml_response
 
     def accept_saml_response(self):
-        SAMLAccessTokenCallbackhandler.callback_url = self.callback_url
-        SAMLAccessTokenCallbackhandler.handler = (lambda r: self.set_saml_response(r))
-        httpd = HTTPServer(('0.0.0.0', setting.LISTEN_PORT), SAMLAccessTokenCallbackhandler)
+        SAMLAccessTokenCallbackHandler.callback_url = self.callback_url
+        SAMLAccessTokenCallbackHandler.handler = (lambda r: self.set_saml_response(r))
+        httpd = HTTPServer(('0.0.0.0', setting.LISTEN_PORT), SAMLAccessTokenCallbackHandler)
         httpd.handle_request()
         httpd.server_close()
 

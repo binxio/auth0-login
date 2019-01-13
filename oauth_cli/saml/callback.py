@@ -3,7 +3,7 @@ from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs
 
 
-class SAMLAccessTokenCallbackhandler(BaseHTTPRequestHandler):
+class SAMLAccessTokenCallbackHandler(BaseHTTPRequestHandler):
     handler = lambda response: print(response)
 
     def log_message(self, format, *args):
@@ -22,7 +22,7 @@ class SAMLAccessTokenCallbackhandler(BaseHTTPRequestHandler):
             values = {}
 
         if 'SAMLResponse' in values:
-            SAMLAccessTokenCallbackhandler.handler(''.join(values['SAMLResponse']))
+            SAMLAccessTokenCallbackHandler.handler(''.join(values['SAMLResponse']))
             msg = f'Received SAML response'
         else:
             msg = f'failed to read a SAMLResponse from the post body'

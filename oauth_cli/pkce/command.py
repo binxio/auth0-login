@@ -11,7 +11,7 @@ from urllib.parse import urlencode
 from uuid import uuid4
 
 from oauth_cli.config import setting
-from oauth_cli.pkce.callback import PKCEAccessTokenCallbackhandler
+from oauth_cli.pkce.callback import PKCEAccessTokenCallbackHandler
 
 
 class PKCEGetIdTokenCommand(object):
@@ -39,13 +39,13 @@ class PKCEGetIdTokenCommand(object):
         self.tokens = tokens
 
     def accept_access_code(self):
-        PKCEAccessTokenCallbackhandler.client_id = setting.CLIENT_ID
-        PKCEAccessTokenCallbackhandler.token_url = self.token_url
-        PKCEAccessTokenCallbackhandler.callback_url = self.callback_url
-        PKCEAccessTokenCallbackhandler.verifier = self.verifier
-        PKCEAccessTokenCallbackhandler.state = self.state
-        PKCEAccessTokenCallbackhandler.handler = (lambda tokens: self.set_tokens(tokens))
-        httpd = HTTPServer(('0.0.0.0', setting.LISTEN_PORT), PKCEAccessTokenCallbackhandler)
+        PKCEAccessTokenCallbackHandler.client_id = setting.CLIENT_ID
+        PKCEAccessTokenCallbackHandler.token_url = self.token_url
+        PKCEAccessTokenCallbackHandler.callback_url = self.callback_url
+        PKCEAccessTokenCallbackHandler.verifier = self.verifier
+        PKCEAccessTokenCallbackHandler.state = self.state
+        PKCEAccessTokenCallbackHandler.handler = (lambda tokens: self.set_tokens(tokens))
+        httpd = HTTPServer(('0.0.0.0', setting.LISTEN_PORT), PKCEAccessTokenCallbackHandler)
         httpd.handle_request()
         httpd.server_close()
 

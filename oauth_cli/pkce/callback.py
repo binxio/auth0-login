@@ -7,7 +7,7 @@ import jwt
 import requests
 
 
-class PKCEAccessTokenCallbackhandler(BaseHTTPRequestHandler):
+class PKCEAccessTokenCallbackHandler(BaseHTTPRequestHandler):
     client_id = None
     verifier = None
     callback_url = None
@@ -38,8 +38,8 @@ class PKCEAccessTokenCallbackhandler(BaseHTTPRequestHandler):
     def do_GET(self):
         codes = parse_qs(urlparse(self.path).query)
         state = ''.join(codes.get('state', []))
-        if state != PKCEAccessTokenCallbackhandler.state:
-            msg = f'Authentication failed! expected code for state {PKCEAccessTokenCallbackhandler.state}, received {state}.'
+        if state != PKCEAccessTokenCallbackHandler.state:
+            msg = f'Authentication failed! expected code for state {PKCEAccessTokenCallbackHandler.state}, received {state}.'
             self.write_reply(msg, logging.ERROR)
             return
 
@@ -50,20 +50,20 @@ class PKCEAccessTokenCallbackhandler(BaseHTTPRequestHandler):
 
         body = {
             "grant_type": "authorization_code",
-            "client_id": PKCEAccessTokenCallbackhandler.client_id,
-            "code_verifier": PKCEAccessTokenCallbackhandler.verifier,
+            "client_id": PKCEAccessTokenCallbackHandler.client_id,
+            "code_verifier": PKCEAccessTokenCallbackHandler.verifier,
             "code": codes['code'][0],
-            "redirect_uri": PKCEAccessTokenCallbackhandler.callback_url,
+            "redirect_uri": PKCEAccessTokenCallbackHandler.callback_url,
             "prompt": "none"
         }
         logging.debug('obtaining access token with code, %s', body)
-        response = requests.post(PKCEAccessTokenCallbackhandler.token_url, json=body)
+        response = requests.post(PKCEAccessTokenCallbackHandler.token_url, json=body)
         logging.debug('status code %d, %s', response.status_code, response.text)
 
         if response.status_code == 200:
             self.write_reply('Authenticated! You may close this window.')
             tokens = response.json()
-            PKCEAccessTokenCallbackhandler.handler(tokens)
+            PKCEAccessTokenCallbackHandler.handler(tokens)
             self.write_tokens(tokens)
         else:
             self.write_reply(f'Authentication failed! {response.text}', logging.ERROR)
