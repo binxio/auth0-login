@@ -8,6 +8,7 @@ from sys import exit, stderr
 from xml.etree import ElementTree
 
 import boto3
+import click
 
 from oauth_cli.config import setting
 from oauth_cli.saml.command import SAMLGetAccessTokenCommand
@@ -103,3 +104,12 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
         else:
             logging.error('--account, --role and --profile are required.')
             exit(1)
+
+
+@click.command('aws-saml-assume-role', help='AWS assume role with SAML token')
+@click.option('--account', help='aws account number')
+@click.option('--role', help='to assume using the token')
+@click.option('--profile', help='to store the credentials under')
+def assume_role_with_saml(account, role, profile):
+    cmd = AWSSTSGetCredentialsFromSAMLCommand(account, role, profile)
+    cmd.run()

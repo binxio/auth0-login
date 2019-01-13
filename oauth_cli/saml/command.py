@@ -1,9 +1,10 @@
 import logging
 import webbrowser
 from http.server import HTTPServer
-from os import path, chmod
 from sys import exit
 from urllib.parse import urlencode
+
+import click
 
 from oauth_cli.config import setting
 from oauth_cli.saml.callback import SAMLAccessTokenCallbackhandler
@@ -46,3 +47,11 @@ class SAMLGetAccessTokenCommand(object):
         else:
             logging.error('no SAML response retrieved')
             exit(1)
+
+
+@click.command('get-saml-token', help='get a SAML response token')
+def get_saml_token():
+    cmd = SAMLGetAccessTokenCommand()
+    cmd.run()
+
+

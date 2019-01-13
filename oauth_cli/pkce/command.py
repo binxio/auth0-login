@@ -1,3 +1,4 @@
+import click
 import hashlib
 import json
 import logging
@@ -19,11 +20,8 @@ class PKCEGetIdTokenCommand(object):
         self.scope = 'profile'
         self.tokens = {}
         self.state = str(uuid4())
-
-        # TODO: bug report -> Auth0 does not accept any generated verifier/challenge.
-        self.generate_verifier = False
-        self.verifier = "EYOYp0s4oatPC8GwiiQnLP6XFbbvncBGq-VDp8Zk2Xw"
-        self.challenge = "DdxpBsQJdFNxBd18fOWi56wft8TNDcYEWNjEX8FiEQY"
+        self.verifier = self.b64encode(bytearray(getrandbits(8) for _ in range(32)))
+        self.challenge = self.b64encode(hashlib.sha256(self.verifier.encode('ascii')).digest())
 
     @property
     def callback_url(self):
@@ -75,12 +73,6 @@ class PKCEGetIdTokenCommand(object):
     def b64encode(s):
         return urlsafe_b64encode(s).decode('ascii').strip("=")
 
-    def generate_code_verifier(self):
-        verifier = bytearray(getrandbits(8) for _ in range(32))
-        challenge = hashlib.sha256(verifier).digest()
-        self.verifier = self.b64encode(verifier)
-        self.challenge = self.b64encode(challenge)
-
     def run(self):
         self.request_authorization()
         if self.tokens:
@@ -107,3 +99,20 @@ class PKCEGetAccessTokenCommand(PKCEGetIdTokenCommand):
             logging.error('audience is required')
             exit(1)
         super(PKCEGetAccessTokenCommand,self).run()
+
+
+@click.command('get-access-jwt', help='get an access JWT')
+@click.option('--audience', help='to obtain an access token for. default from ~/.oauth-cli.ini')
+@click.option('--scope', default='profile', help='of the access token')
+def get_access_token(audience, scope):
+    cmd = PKCEGetAccessTokenCommand()
+    if audience:
+        cmd.audience = audience
+    if scope:
+        cmd.scope = scope
+    cmd.run()
+
+@click.command('get-id-jwt', help='get an id JWT')
+def get_id_token():
+    cmd = PKCEGetIdTokenCommand()
+    cmd.run()

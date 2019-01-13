@@ -1,51 +1,37 @@
 import logging
+import socket
+from sys import exit
 
 import click
 
 from oauth_cli.config import setting
-from oauth_cli.pkce import PKCEGetAccessTokenCommand, PKCEGetIdTokenCommand
-from oauth_cli.saml import SAMLGetAccessTokenCommand, AWSSTSGetCredentialsFromSAMLCommand
+from oauth_cli.pkce import get_access_token, get_id_token
+from oauth_cli.saml import assume_role_with_saml, get_saml_token
+
+
+def assert_listen_port_is_available():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind(('0.0.0.0', setting.LISTEN_PORT))
+        s.close()
+    except socket.error as e:
+        logging.error('port %d is not available, %s', setting.LISTEN_PORT, e.strerror)
+        exit(1)
 
 
 @click.group(name='oauth-cli')
 @click.option('--verbose', is_flag=True, default=False, help=' for tracing purposes')
-@click.option('--application', default="DEFAULT", help='configured in ~/.oauth-cli.ini to use')
-def cli(verbose, application):
+@click.option('--configuration', '-c', default="DEFAULT", help='configured in ~/.oauth-cli.ini to use')
+def cli(verbose, configuration):
     logging.basicConfig(level=(logging.DEBUG if verbose else logging.INFO))
-    setting.SECTION = application
-    print(setting.SECTION)
-    print(setting.CLIENT_ID)
+    setting.SECTION = configuration
+    assert_listen_port_is_available()
 
 
-@cli.command('get-access-token')
-@click.option('--audience', help='to obtain an access token for. default from ~/.oauth-cli.ini')
-@click.option('--scope', default='profile', help='of the access token')
-def get_access_token(audience, scope):
-    cmd = PKCEGetAccessTokenCommand()
-    if audience:
-        cmd.audience = audience
-    if scope:
-        cmd.scope = scope
-    cmd.run()
-
-@cli.command('get-id-token')
-def get_access_token():
-    cmd = PKCEGetIdTokenCommand()
-    cmd.run()
-
-@cli.command('get-saml-token')
-def get_access_token():
-    cmd = SAMLGetAccessTokenCommand()
-    cmd.run()
-
-@cli.command('aws-saml-assume-role')
-@click.option('--account', help='aws account number')
-@click.option('--role', help='to assume using the token')
-@click.option('--profile', help='to store the credentials under')
-def get_access_token(account, role, profile):
-    cmd = AWSSTSGetCredentialsFromSAMLCommand(account, role, profile)
-    cmd.run()
-
+cli.add_command(get_access_token)
+cli.add_command(get_id_token)
+cli.add_command(get_saml_token)
+cli.add_command(assume_role_with_saml)
 
 if __name__ == '__main__':
     cli()
