@@ -54,4 +54,3 @@ def get_saml_token():
     cmd = SAMLGetAccessTokenCommand()
     cmd.run()
 
-

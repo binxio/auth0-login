@@ -27,13 +27,13 @@ SHELL=/bin/bash
 
 build: pre-build do-build post-build
 
-pre-build:
+pre-build: venv
 
 
 post-build:
 
 
-do-build: venv
+do-build: 
 	. venv/bin/activate && python setup.py check
 	. venv/bin/activate && python setup.py build
 	. venv/bin/activate && python setup.py test
