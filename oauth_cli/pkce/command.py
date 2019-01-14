@@ -1,4 +1,3 @@
-import click
 import hashlib
 import json
 import logging
@@ -10,6 +9,8 @@ from sys import exit, stdout
 from urllib.parse import urlencode
 from uuid import uuid4
 
+import click
+
 from oauth_cli.config import setting
 from oauth_cli.pkce.callback import PKCEAccessTokenCallbackHandler
 
@@ -17,15 +18,13 @@ from oauth_cli.pkce.callback import PKCEAccessTokenCallbackHandler
 class PKCEGetIdTokenCommand(object):
     def __init__(self):
         self.client_id = setting.CLIENT_ID
-        self.scope = 'profile'
+        self.scope = setting.attributes.get('scope', 'openid profile email')
         self.tokens = {}
         self.state = str(uuid4())
         self.verifier = self.b64encode(bytearray(getrandbits(8) for _ in range(32)))
         self.challenge = self.b64encode(hashlib.sha256(self.verifier.encode('ascii')).digest())
-
-    @property
-    def callback_url(self):
-        return f'http://localhost:{setting.LISTEN_PORT}/callback'
+        self.callback_url = setting.attributes.get('pkce_callback_url',
+                                                   f'http://localhost:{setting.LISTEN_PORT}/callback')
 
     @property
     def token_url(self):
@@ -66,6 +65,7 @@ class PKCEGetIdTokenCommand(object):
         return self.authorize_url + '?' + urlencode(self.query_parameters);
 
     def request_authorization(self):
+        logging.debug('url = %s', self.url)
         webbrowser.open(self.url)
         self.accept_access_code()
 
@@ -84,26 +84,25 @@ class PKCEGetIdTokenCommand(object):
 
 class PKCEGetAccessTokenCommand(PKCEGetIdTokenCommand):
     def __init__(self):
-        super(PKCEGetAccessTokenCommand,self).__init__()
+        super(PKCEGetAccessTokenCommand, self).__init__()
         self.audience = setting.attributes.get('audience')
 
     @property
     def query_parameters(self):
-        result = super(PKCEGetAccessTokenCommand,self).query_parameters
-        result.update({"audience": self.audience })
+        result = super(PKCEGetAccessTokenCommand, self).query_parameters
+        result.update({"audience": self.audience})
         return result
-
 
     def run(self):
         if not self.audience:
             logging.error('audience is required')
             exit(1)
-        super(PKCEGetAccessTokenCommand,self).run()
+        super(PKCEGetAccessTokenCommand, self).run()
 
 
 @click.command('get-access-jwt', help='get an access JWT')
 @click.option('--audience', help='to obtain an access token for. default from ~/.oauth-cli.ini')
-@click.option('--scope', default='profile', help='of the access token')
+@click.option('--scope', help='of the access token')
 def get_access_token(audience, scope):
     cmd = PKCEGetAccessTokenCommand()
     if audience:
@@ -111,6 +110,7 @@ def get_access_token(audience, scope):
     if scope:
         cmd.scope = scope
     cmd.run()
+
 
 @click.command('get-id-jwt', help='get an id JWT')
 def get_id_token():
