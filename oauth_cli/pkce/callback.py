@@ -22,13 +22,17 @@ class PKCEAccessTokenCallbackHandler(BaseHTTPRequestHandler):
                        fmt % args))
 
     def write_tokens(self, tokens):
-        if 'id_token' in tokens:
-            self.wfile.write(json.dumps(jwt.decode(tokens['id_token'], verify=False), indent=2).encode('utf-8'))
-        elif 'access_token' in tokens:
-            self.wfile.write(json.dumps(jwt.decode(tokens['access_token'], verify=False), indent=2).encode('utf-8'))
+        token = 'id_token' if 'id_token' in tokens else 'access_token'
+        try:
+            self.wfile.write(json.dumps(jwt.decode(tokens[token], verify=False), indent=2).encode('utf-8'))
+        except jwt.DecodeError as e:
+            msg = f'failed to decode {token}, {e}'
+            logging.error(msg)
+            self.wfile.write(msg.encode('utf-8'))
 
     def write_reply(self, msg, loglevel=logging.DEBUG):
         self.send_response(200)
+        self.send_header('Connection', 'close')
         self.send_header('Content-type', 'text/plain;utf-8')
         self.end_headers()
         self.wfile.write(msg.encode('utf-8'))

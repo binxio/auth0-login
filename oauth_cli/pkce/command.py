@@ -18,7 +18,7 @@ from oauth_cli.pkce.callback import PKCEAccessTokenCallbackHandler
 class PKCEGetIdTokenCommand(object):
     def __init__(self):
         self.client_id = setting.CLIENT_ID
-        self.scope = setting.attributes.get('scope', 'openid profile email')
+        self.scope = "openid profile"
         self.tokens = {}
         self.state = str(uuid4())
         self.verifier = self.b64encode(bytearray(getrandbits(8) for _ in range(32)))
@@ -45,8 +45,10 @@ class PKCEGetIdTokenCommand(object):
         PKCEAccessTokenCallbackHandler.state = self.state
         PKCEAccessTokenCallbackHandler.handler = (lambda tokens: self.set_tokens(tokens))
         httpd = HTTPServer(('0.0.0.0', setting.LISTEN_PORT), PKCEAccessTokenCallbackHandler)
-        httpd.handle_request()
-        httpd.server_close()
+        try:
+            httpd.handle_request()
+        finally:
+            httpd.server_close()
 
     @property
     def query_parameters(self):
@@ -86,11 +88,12 @@ class PKCEGetAccessTokenCommand(PKCEGetIdTokenCommand):
     def __init__(self):
         super(PKCEGetAccessTokenCommand, self).__init__()
         self.audience = setting.attributes.get('audience')
+        self.scope = setting.attributes.get('scope', 'profile')
 
     @property
     def query_parameters(self):
         result = super(PKCEGetAccessTokenCommand, self).query_parameters
-        result.update({"audience": self.audience})
+        result.update({"audience": self.audience, "scope": self.scope})
         return result
 
     def run(self):

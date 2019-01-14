@@ -28,6 +28,7 @@ class SAMLAccessTokenCallbackHandler(BaseHTTPRequestHandler):
             msg = f'failed to read a SAMLResponse from the post body'
 
         self.send_response(200)
+        self.send_header('Connection', 'close')
         self.send_header('Content-type', 'text/plain;utf-8')
         self.end_headers()
         self.wfile.write(msg.encode('utf-8'))
