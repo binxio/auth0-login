@@ -54,7 +54,6 @@ class PKCEAccessTokenCallbackHandler(BaseHTTPRequestHandler):
             "code_verifier": PKCEAccessTokenCallbackHandler.verifier,
             "code": codes['code'][0],
             "redirect_uri": PKCEAccessTokenCallbackHandler.callback_url,
-            "prompt": "none"
         }
         logging.debug('obtaining access token with code, %s', body)
         response = requests.post(PKCEAccessTokenCallbackHandler.token_url, json=body)
