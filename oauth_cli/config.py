@@ -1,5 +1,4 @@
 from os import path
-from sys import exit
 import logging
 import configparser
 
@@ -32,16 +31,17 @@ class __Setting(object):
     @property
     def CLIENT_ID(self):
         if not self.config.has_option(self.SECTION, 'client_id'):
-            logging.error('property client_id is missing from ~/.oauth-cli.ini')
-            exit(1)
+            logging.fatal('property client_id is missing from .oauth-cli.ini')
         return self.config.get(self.SECTION, 'client_id')
 
     @property
     def IDP_URL(self):
         if not self.config.has_option(self.SECTION, 'idp_url'):
-            logging.error('property idl_url is missing from ~/.oauth-cli.ini')
-            exit(1)
+            logging.fatal('property idl_url is missing from .oauth-cli.ini')
         return self.config.get(self.SECTION, 'idp_url')
 
+    @property
+    def exists(self):
+        return self.config.has_section(self.SECTION)
 
 setting = __Setting()

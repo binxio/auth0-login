@@ -5,18 +5,27 @@ import webbrowser
 from base64 import urlsafe_b64encode
 from http.server import HTTPServer
 from random import getrandbits
-from sys import exit, stdout
-from urllib.parse import urlencode, urlparse
+from sys import stdout
+from urllib.parse import urlencode
 from uuid import uuid4
-from oauth_cli.util import get_listen_port_from_url
 
 import click
 
 from oauth_cli.config import setting
 from oauth_cli.pkce.callback import PKCEAccessTokenCallbackHandler
+from oauth_cli.util import get_listen_port_from_url, assert_listen_port_is_available
 
 
 class PKCEGetIdTokenCommand(object):
+    """
+    requests an JWT id token using the PKCE authorization flow and prints
+    all the returned data to standard output.
+
+    The request is sent  `{idp_url}/authorize`, the callback
+    defaults to `http://localhost:{listen_port}/callback`, but may be
+    explicitly set using the `pcke_callback_url` property.
+
+    """
     def __init__(self):
         self.client_id = setting.CLIENT_ID
         self.scope = "openid profile"
@@ -69,7 +78,7 @@ class PKCEGetIdTokenCommand(object):
 
     @property
     def url(self):
-        return self.authorize_url + '?' + urlencode(self.query_parameters);
+        return self.authorize_url + '?' + urlencode(self.query_parameters)
 
     def request_authorization(self):
         logging.debug('url = %s', self.url)
@@ -81,19 +90,32 @@ class PKCEGetIdTokenCommand(object):
         return urlsafe_b64encode(s).decode('ascii').strip("=")
 
     def run(self):
+        assert_listen_port_is_available(self.listen_port)
         self.request_authorization()
         if self.tokens:
             json.dump(self.tokens, stdout)
         else:
-            logging.error('no token retrieved')
-            exit(1)
+            logging.fatal('no token retrieved')
 
 
 class PKCEGetAccessTokenCommand(PKCEGetIdTokenCommand):
+    """
+    requests an JWT access token using the PKCE authorization flow for the
+    specified `audience` and `scope`. All returned data to printed to
+    standard output.
+
+    Both `audience` and `scope` can be specified as a command line option
+    or in the .oauth-cli.ini.
+
+    The request is sent  `{idp_url}/authorize`, the callback
+    defaults to `http://localhost:{listen_port}/callback, but may be
+    explicitly set using the `pcke_callback_url` property.
+
+    """
     def __init__(self):
         super(PKCEGetAccessTokenCommand, self).__init__()
         self.audience = setting.attributes.get('audience')
-        self.scope = setting.attributes.get('scope', 'profile')
+        self.scope = setting.attributes.get('scope', 'openid profile')
 
     @property
     def query_parameters(self):
@@ -103,12 +125,11 @@ class PKCEGetAccessTokenCommand(PKCEGetIdTokenCommand):
 
     def run(self):
         if not self.audience:
-            logging.error('audience is required')
-            exit(1)
+            logging.fatal('audience is required')
         super(PKCEGetAccessTokenCommand, self).run()
 
 
-@click.command('get-access-jwt', help='get an access JWT')
+@click.command('get-access-jwt', help=PKCEGetAccessTokenCommand.__doc__)
 @click.option('--audience', help='to obtain an access token for. default from ~/.oauth-cli.ini')
 @click.option('--scope', help='of the access token')
 def get_access_token(audience, scope):
@@ -120,7 +141,7 @@ def get_access_token(audience, scope):
     cmd.run()
 
 
-@click.command('get-id-jwt', help='get an id JWT')
+@click.command('get-id-jwt', help=PKCEGetIdTokenCommand.__doc__)
 def get_id_token():
     cmd = PKCEGetIdTokenCommand()
     cmd.run()

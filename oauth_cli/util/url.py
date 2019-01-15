@@ -1,4 +1,15 @@
+import logging
+import socket
 from urllib.parse import urlparse
+
+def assert_listen_port_is_available(port : int):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind(('0.0.0.0', port))
+        s.close()
+    except socket.error as e:
+        logging.fatal('port %d is not available, %s', port, e.strerror)
+
 
 def get_listen_port_from_url(url : str) -> int:
     """
@@ -7,3 +18,5 @@ def get_listen_port_from_url(url : str) -> int:
     result = urlparse(url)
     authority = result.netloc.split(':')
     return int(authority[1] if len(authority) == 2 else (443 if result.scheme == 'https' else 80))
+
+

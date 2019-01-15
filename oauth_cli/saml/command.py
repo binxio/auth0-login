@@ -1,17 +1,25 @@
 import logging
 import webbrowser
 from http.server import HTTPServer
-from sys import exit
-from urllib.parse import urlencode
 
 import click
 
 from oauth_cli.config import setting
 from oauth_cli.saml.callback import SAMLAccessTokenCallbackHandler
-from oauth_cli.util import get_listen_port_from_url
+from oauth_cli.util import get_listen_port_from_url, assert_listen_port_is_available
 
 
 class SAMLGetAccessTokenCommand(object):
+    """
+    gets a SAML response token from the SAML Provider and prints
+    it to standard output.
+
+    The request is sent to `{idp_url}/samlp/{client_id}`. The callback
+    is `http://localhost:{listen_port}/saml`.
+
+    you can configure the `listen_port`, `idp_url` and
+    `client_id` in the .oauth-cli.ini.
+    """
     def __init__(self):
         self.idp_url = setting.IDP_URL
         self.client_id = setting.CLIENT_ID
@@ -41,20 +49,19 @@ class SAMLGetAccessTokenCommand(object):
         httpd.server_close()
 
     def request_authorization(self):
-        query_parameters = urlencode({'redirect_uri': self.callback_url})
-        webbrowser.open(f'{self.saml_idp_url}?{query_parameters}')
+        webbrowser.open(self.saml_idp_url)
         self.accept_saml_response()
 
     def run(self):
+        assert_listen_port_is_available(self.listen_port)
         self.request_authorization()
         if self.saml_response:
             print(self.saml_response)
         else:
-            logging.error('no SAML response retrieved')
-            exit(1)
+            logging.fatal('no SAML response retrieved')
 
 
-@click.command('get-saml-token', help='get a SAML response token')
+@click.command('get-saml-token', help=SAMLGetAccessTokenCommand.__doc__)
 def get_saml_token():
     cmd = SAMLGetAccessTokenCommand()
     cmd.run()
