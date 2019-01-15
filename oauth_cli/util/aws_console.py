@@ -28,5 +28,3 @@ def open_aws_console(profile: str):
     console = requests.Request('GET', 'https://signin.aws.amazon.com/federation', params=params)
     prepared_link = console.prepare()
     webbrowser.open(prepared_link.url)
-
-

@@ -29,6 +29,7 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
     The credentials will be stored under the specified `profile` name.
     By specifying `--open-console` it will open the AWS console too.
     """
+
     def __init__(self, account, role, profile):
         super(AWSSTSGetCredentialsFromSAMLCommand, self).__init__()
         self.account = account if account else setting.attributes.get('aws_account')
@@ -119,7 +120,6 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
         logging.info(
             f'credentials for {self.role} in account {self.account} have been written in AWS profile {self.profile}.')
 
-
     def run(self):
         if self.account and self.role and self.profile:
             self.request_authorization()
@@ -144,4 +144,3 @@ def assume_role_with_saml(account, role, profile, show, open_console):
         if open_console:
             cmd.open_console = True
         cmd.run()
-

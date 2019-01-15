@@ -26,6 +26,7 @@ class PKCEGetIdTokenCommand(object):
     explicitly set using the `pcke_callback_url` property.
 
     """
+
     def __init__(self):
         self.client_id = setting.CLIENT_ID
         self.scope = "openid profile"
@@ -112,6 +113,7 @@ class PKCEGetAccessTokenCommand(PKCEGetIdTokenCommand):
     explicitly set using the `pcke_callback_url` property.
 
     """
+
     def __init__(self):
         super(PKCEGetAccessTokenCommand, self).__init__()
         self.audience = setting.attributes.get('audience')

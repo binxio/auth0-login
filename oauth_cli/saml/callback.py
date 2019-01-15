@@ -4,7 +4,7 @@ from urllib.parse import parse_qs
 
 
 class SAMLAccessTokenCallbackHandler(BaseHTTPRequestHandler):
-    handler = lambda response: print(response)
+    def handler(response): return print(response)
 
     def log_message(self, format, *args):
         logging.debug("%s - - [%s] %s\n" %

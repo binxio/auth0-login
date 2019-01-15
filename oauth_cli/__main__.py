@@ -8,8 +8,6 @@ from oauth_cli.pkce import get_access_token, get_id_token
 from oauth_cli.saml import assume_role_with_saml, get_saml_token
 
 
-
-
 def myfatal(msg, *args, **kwargs):
     """
     override logging fatal, with an error message and exit
@@ -18,7 +16,7 @@ def myfatal(msg, *args, **kwargs):
     exit(1)
 
 
-@click.group(name='oauth-cli', help = """
+@click.group(name='oauth-cli', help="""
 A command line utility to obtain JWT, SAML tokens and AWS credentials using SAML.
 """)
 @click.option('--verbose', is_flag=True, default=False, help=' for tracing purposes')
@@ -30,6 +28,7 @@ def cli(verbose, configuration):
     if not setting.exists:
         logging.fatal('no configuration %s found in .oauth-cli.ini', configuration)
 
+
 cli.add_command(get_access_token)
 cli.add_command(get_id_token)
 cli.add_command(get_saml_token)
@@ -37,4 +36,3 @@ cli.add_command(assume_role_with_saml)
 
 if __name__ == '__main__':
     cli()
-

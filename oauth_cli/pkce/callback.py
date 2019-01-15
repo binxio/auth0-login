@@ -13,7 +13,8 @@ class PKCEAccessTokenCallbackHandler(BaseHTTPRequestHandler):
     callback_url = None
     token_url = None
     state = None
-    handler = lambda tokens: print(tokens.get('access_token'))
+
+    def handler(tokens): return print(tokens.get('access_token'))
 
     def log_message(self, fmt, *args):
         logging.debug("%s - - [%s] %s\n" %

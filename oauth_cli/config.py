@@ -2,6 +2,7 @@ from os import path
 import logging
 import configparser
 
+
 class __Setting(object):
     def __init__(self):
         self.config = configparser.ConfigParser()
@@ -43,5 +44,6 @@ class __Setting(object):
     @property
     def exists(self):
         return self.config.has_section(self.SECTION)
+
 
 setting = __Setting()

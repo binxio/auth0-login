@@ -20,6 +20,7 @@ class SAMLGetAccessTokenCommand(object):
     you can configure the `listen_port`, `idp_url` and
     `client_id` in the .oauth-cli.ini.
     """
+
     def __init__(self):
         self.idp_url = setting.IDP_URL
         self.client_id = setting.CLIENT_ID
@@ -65,4 +66,3 @@ class SAMLGetAccessTokenCommand(object):
 def get_saml_token():
     cmd = SAMLGetAccessTokenCommand()
     cmd.run()
-
