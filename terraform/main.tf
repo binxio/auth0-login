@@ -60,8 +60,9 @@ resource "auth0_rule" "grant-admin" {
   script = <<EOF
 function (user, context, callback) {
 
-  user.awsRole = '${aws_iam_role.administrator.arn},${aws_iam_saml_provider.auth0-provider.arn}';
-  user.awsRoleSession = 'admin';
+  user.awsRole = [ '${aws_iam_role.OAuthAdministrator.arn},${aws_iam_saml_provider.auth0-provider.arn}', 
+		   '${aws_iam_role.OAuthIdentity.arn},${aws_iam_saml_provider.auth0-provider.arn}'];
+  user.awsRoleSession = user.email;
 
   context.samlConfiguration.mappings = {
     'https://aws.amazon.com/SAML/Attributes/Role': 'awsRole',
@@ -88,5 +89,5 @@ output "oauth-cli.ini" {
 }
 
 output "assume-role-with-saml" {
-  value = "\naws --profile ${var.aws_profile} sts assume-role-with-saml \\\n\t--role-arn ${aws_iam_role.administrator.arn} \\\n\t--principal-arn ${aws_iam_saml_provider.auth0-provider.arn} \\\n\t--saml-assertion \"$SAML_RESPONSE\""
+  value = "\naws --profile ${var.aws_profile} sts assume-role-with-saml \\\n\t--role-arn ${aws_iam_role.OAuthAdministrator.arn} \\\n\t--principal-arn ${aws_iam_saml_provider.auth0-provider.arn} \\\n\t--saml-assertion \"$SAML_RESPONSE\""
 }

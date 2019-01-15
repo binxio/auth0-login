@@ -1,17 +1,34 @@
-resource "aws_iam_saml_provider" "auth0-provider" {
-  name                   = "auth0-${replace(var.auth0_domain,".","-")}-provider"
-  saml_metadata_document = "${data.http.auth0-saml-metadata.body}"
-}
-
-resource "aws_iam_role" "administrator" {
+resource "aws_iam_role" "OAuthAdministrator" {
   name               = "OAuthAdministrator"
   assume_role_policy = "${data.aws_iam_policy_document.auth0_assume_role_policy.json}"
 }
 
-resource "aws_iam_policy_attachment" "PowerUserAccess" {
-  name       = "PowerUserAccess"
-  roles      = ["${aws_iam_role.administrator.name}"]
+resource "aws_iam_role_policy_attachment" "OAuthAdministrator" {
+  role       = "${aws_iam_role.OAuthAdministrator.name}"
   policy_arn = "arn:aws:iam::aws:policy/PowerUserAccess"
+}
+
+resource "aws_iam_role" "OAuthIdentity" {
+  name               = "OAuthIdentity"
+  assume_role_policy = "${data.aws_iam_policy_document.auth0_assume_role_policy.json}"
+}
+
+data "aws_iam_policy_document" "OAuthIdentity" {
+  statement {
+    actions   = ["sts:GetCallerIdentity"]
+    resources = [ "*" ]
+  }
+}
+
+resource "aws_iam_policy" "OAuthIdentity" {
+  name        = "OAuthIdentity"
+  description = "allows the caller to obtain its own identity"
+  policy      = "${data.aws_iam_policy_document.OAuthIdentity.json}"
+}
+
+resource "aws_iam_role_policy_attachment" "OAuthIdentity" {
+  role       = "${aws_iam_role.OAuthIdentity.name}"
+  policy_arn = "${aws_iam_policy.OAuthIdentity.arn}"
 }
 
 data "aws_iam_policy_document" "auth0_assume_role_policy" {
@@ -29,4 +46,9 @@ data "aws_iam_policy_document" "auth0_assume_role_policy" {
       identifiers = ["${aws_iam_saml_provider.auth0-provider.arn}"]
     }
   }
+}
+
+resource "aws_iam_saml_provider" "auth0-provider" {
+  name                   = "auth0-${replace(var.auth0_domain,".","-")}-provider"
+  saml_metadata_document = "${data.http.auth0-saml-metadata.body}"
 }

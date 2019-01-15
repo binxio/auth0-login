@@ -24,7 +24,8 @@ class PKCEAccessTokenCallbackHandler(BaseHTTPRequestHandler):
     def write_tokens(self, tokens):
         for token in ['id_token', 'access_token']:
             try:
-                self.wfile.write(json.dumps(jwt.decode(tokens[token], verify=False), indent=2).encode('utf-8'))
+                if '.' in tokens[token]:
+                    self.wfile.write(json.dumps(jwt.decode(tokens[token], verify=False), indent=2).encode('utf-8'))
             except jwt.DecodeError as e:
                 logging.debug(f'failed to decode {token}, {e}')
 

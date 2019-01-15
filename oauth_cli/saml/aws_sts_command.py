@@ -3,8 +3,9 @@ import binascii
 import configparser
 import logging
 import re
-from os import path, chmod
+from os import chmod, path
 from sys import exit, stderr
+from typing import List
 from xml.etree import ElementTree
 
 import boto3
@@ -29,8 +30,8 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
     def get_attributes(self, saml_statement: ElementTree.Element):
         result = {}
         for attribute in saml_statement.findall('./saml:Attribute', self.namespaces):
-            value: ElementTree.Element = attribute.find('./saml:AttributeValue', self.namespaces)
-            result[attribute.get('Name')] = value.text
+            value: List[ElementTree.Element] = attribute.findall('./saml:AttributeValue', self.namespaces)
+            result[attribute.get('Name')] = list(map(lambda v: v.text, value))
         return result
 
     def get_statements(self, root: ElementTree.Element):
@@ -42,9 +43,8 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
 
     def get_roles(self):
         role_name = 'https://aws.amazon.com/SAML/Attributes/Role'
-        self.roles = {r[0]: r[1] for r in map(lambda r: r.split(','), map(lambda s: s[role_name],
-                                                                          filter(lambda s: role_name in s,
-                                                                                 self.statements)))}
+        roles = next(iter(map(lambda s: s[role_name], filter(lambda s: role_name in s, self.statements))), [])
+        self.roles = {r[0]: r[1] for r in map(lambda r: r.split(','), roles)}
 
     def parse_xml_response(self, saml_response) -> ElementTree.Element:
         result = None
@@ -95,7 +95,8 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
         with open(filename, 'w') as f:
             config.write(f)
         chmod(filename, 0o600)
-        logging.info(f'new credentials for {self.role} in account {self.account} have been written to ~/.aws/credentials')
+        logging.info(
+            f'new credentials for {self.role} in account {self.account} have been written to ~/.aws/credentials')
 
     def run(self):
         if self.account and self.role and self.profile:
