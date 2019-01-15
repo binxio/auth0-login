@@ -4,7 +4,7 @@ import configparser
 import logging
 import re
 from os import chmod, path
-from sys import exit, stderr
+from sys import exit, stdout
 from typing import List
 from xml.etree import ElementTree
 
@@ -68,7 +68,17 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
     def print_roles(self):
         arn_pattern = re.compile(r'arn:aws:iam::(?P<account>[^:]*):role/(?P<role>.*)')
         for role in self.roles:
-            stderr.write('\t{account}\t{role}\n'.format(**arn_pattern.match(role).groupdict()))
+            match = arn_pattern.match(role)
+            if match:
+                stdout.write(f'oauth-cli ')
+                if setting.SECTION != 'DEFAULT':
+                    stdout.write(f'-c {setting.SECTION} ')
+                role = match.group('role')
+                account = match.group('account')
+                profile = self.profile if self.profile else f'{role}@{account}'
+                stdout.write(f'aws-saml-assume-role --profile {profile} --acount {account} --role {role}\n')
+            else:
+                logging.error('expected a role arn, found %s', role)
 
     def show_account_roles(self):
         self.request_authorization()
@@ -96,7 +106,8 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
             config.write(f)
         chmod(filename, 0o600)
         logging.info(
-            f'new credentials for {self.role} in account {self.account} have been written to ~/.aws/credentials')
+            f'credentials for {self.role} in account {self.account} have been written in AWS profile {self.profile}.')
+
 
     def run(self):
         if self.account and self.role and self.profile:
@@ -111,6 +122,11 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
 @click.option('--account', help='aws account number')
 @click.option('--role', help='to assume using the token')
 @click.option('--profile', help='to store the credentials under')
-def assume_role_with_saml(account, role, profile):
+@click.option('--show', is_flag=True, default=False, help='account roles available to assume')
+def assume_role_with_saml(account, role, profile, show):
     cmd = AWSSTSGetCredentialsFromSAMLCommand(account, role, profile)
-    cmd.run()
+    if show:
+        cmd.show_account_roles()
+    else:
+        cmd.run()
+

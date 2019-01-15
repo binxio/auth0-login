@@ -8,6 +8,7 @@ import click
 
 from oauth_cli.config import setting
 from oauth_cli.saml.callback import SAMLAccessTokenCallbackHandler
+from oauth_cli.util import get_listen_port_from_url
 
 
 class SAMLGetAccessTokenCommand(object):
@@ -25,13 +26,17 @@ class SAMLGetAccessTokenCommand(object):
     def callback_url(self):
         return f'http://localhost:{setting.LISTEN_PORT}/saml'
 
+    @property
+    def listen_port(self):
+        return get_listen_port_from_url(self.callback_url)
+
     def set_saml_response(self, saml_response):
         self.saml_response = saml_response
 
     def accept_saml_response(self):
         SAMLAccessTokenCallbackHandler.callback_url = self.callback_url
         SAMLAccessTokenCallbackHandler.handler = (lambda r: self.set_saml_response(r))
-        httpd = HTTPServer(('0.0.0.0', setting.LISTEN_PORT), SAMLAccessTokenCallbackHandler)
+        httpd = HTTPServer(('0.0.0.0', self.listen_port), SAMLAccessTokenCallbackHandler)
         httpd.handle_request()
         httpd.server_close()
 

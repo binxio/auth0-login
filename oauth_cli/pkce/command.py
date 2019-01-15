@@ -6,8 +6,9 @@ from base64 import urlsafe_b64encode
 from http.server import HTTPServer
 from random import getrandbits
 from sys import exit, stdout
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 from uuid import uuid4
+from oauth_cli.util import get_listen_port_from_url
 
 import click
 
@@ -34,6 +35,10 @@ class PKCEGetIdTokenCommand(object):
     def authorize_url(self):
         return f'{setting.IDP_URL}/authorize'
 
+    @property
+    def listen_port(self):
+        return get_listen_port_from_url(self.callback_url)
+
     def set_tokens(self, tokens):
         self.tokens = tokens
 
@@ -44,7 +49,7 @@ class PKCEGetIdTokenCommand(object):
         PKCEAccessTokenCallbackHandler.verifier = self.verifier
         PKCEAccessTokenCallbackHandler.state = self.state
         PKCEAccessTokenCallbackHandler.handler = (lambda tokens: self.set_tokens(tokens))
-        httpd = HTTPServer(('0.0.0.0', setting.LISTEN_PORT), PKCEAccessTokenCallbackHandler)
+        httpd = HTTPServer(('0.0.0.0', self.listen_port), PKCEAccessTokenCallbackHandler)
         try:
             httpd.handle_request()
         finally:
