@@ -6,13 +6,13 @@ from setuptools import find_packages, setup
 dependencies = ['boto3', 'pyjwt', 'click', 'requests']
 
 setup(
-    name='oauth-cli',
+    name='auth0-login',
     version="0.3.7",
-    url='https://github.com/binxio/oauth-cli',
+    url='https://github.com/binxio/auth0-login',
     license='Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)',
     author='Mark van Holsteijn',
     author_email='mark@binx.io',
-    description='obtain JWT, SAML tokens, and AWS credentials using Auth0, OAuth and SAML',
+    description='CLI to obtain JWT, SAML tokens, and AWS credentials using Auth0, OAuth and SAML',
     long_description=__doc__,
     packages=find_packages(exclude=['tests']),
     include_package_data=True,
@@ -23,8 +23,8 @@ setup(
     test_suite='tests',
     entry_points={
         'console_scripts': [
-            'saml-login = oauth_cli.saml.__main__:cli',
-            'pkce-login = oauth_cli.pkce.__main__:cli',
+            'saml-login = auth0_login.saml.__main__:cli',
+            'pkce-login = auth0_login.pkce.__main__:cli',
         ],
     },
     classifiers=[

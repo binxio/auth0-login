@@ -1,7 +1,7 @@
 import socket
 from urllib.parse import urlparse
 
-from oauth_cli.logging import fatal
+from auth0_login.logging import fatal
 
 
 def assert_listen_port_is_available(port: int):

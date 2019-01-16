@@ -1,1 +1,0 @@
-from oauth_cli.logging.fatal import fatal

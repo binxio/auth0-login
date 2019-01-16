@@ -11,9 +11,9 @@ from uuid import uuid4
 
 import click
 
-from oauth_cli import fatal, setting
-from oauth_cli.pkce.callback import PKCEAccessTokenCallbackHandler
-from oauth_cli.util import assert_listen_port_is_available, get_listen_port_from_url
+from auth0_login import fatal, setting
+from auth0_login.pkce.callback import PKCEAccessTokenCallbackHandler
+from auth0_login.util import assert_listen_port_is_available, get_listen_port_from_url
 
 
 class PKCEGetIdTokenCommand(object):

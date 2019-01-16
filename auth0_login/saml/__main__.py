@@ -2,10 +2,10 @@ import logging
 
 import click
 
-from oauth_cli import fatal
-from oauth_cli.aws import assume_role_with_saml
-from oauth_cli.config import setting
-from oauth_cli.saml import get_saml_token
+from auth0_login import fatal
+from auth0_login.aws import assume_role_with_saml
+from auth0_login.config import setting
+from auth0_login.saml import get_saml_token
 
 
 @click.group(name='saml-login', help="A command line utility to obtain SAML tokens and AWS credentials.")

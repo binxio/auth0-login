@@ -5,7 +5,7 @@ import requests
 from boto3 import Session
 from botocore.credentials import ReadOnlyCredentials
 
-from oauth_cli import fatal, setting
+from auth0_login import fatal, setting
 
 
 def open_aws_console(profile: str):

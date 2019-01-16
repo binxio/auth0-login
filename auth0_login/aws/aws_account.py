@@ -3,7 +3,7 @@ import re
 from collections import namedtuple
 from os import path
 
-from oauth_cli.logging import fatal
+from auth0_login.logging import fatal
 
 AWSAccount = namedtuple('AWSAccount', 'number alias')
 

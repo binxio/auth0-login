@@ -3,9 +3,9 @@ from http.server import HTTPServer
 
 import click
 
-from oauth_cli import fatal, setting
-from oauth_cli.saml.callback import SAMLAccessTokenCallbackHandler
-from oauth_cli.util import assert_listen_port_is_available, get_listen_port_from_url
+from auth0_login import fatal, setting
+from auth0_login.saml.callback import SAMLAccessTokenCallbackHandler
+from auth0_login.util import assert_listen_port_is_available, get_listen_port_from_url
 
 
 class SAMLGetAccessTokenCommand(object):

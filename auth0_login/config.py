@@ -1,7 +1,7 @@
 import configparser
 from os import path
 
-from oauth_cli import fatal
+from auth0_login.logging import fatal
 
 
 class __Setting(object):

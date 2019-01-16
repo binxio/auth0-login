@@ -11,7 +11,7 @@ from xml.etree import ElementTree
 import boto3
 from botocore.exceptions import ClientError
 
-from oauth_cli import fatal
+from auth0_login import fatal
 
 AvailableRole = namedtuple('AvailableRole', 'provider account name arn')
 
