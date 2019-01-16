@@ -5,7 +5,7 @@ import logging
 import re
 from collections import namedtuple
 from os import chmod, path
-from typing import List, Pattern
+from typing import List, Pattern, Dict
 from xml.etree import ElementTree
 
 import boto3
@@ -17,38 +17,45 @@ AvailableRole = namedtuple('AvailableRole', 'provider account name arn')
 class AWSSAMLAssertion(object):
 
     def __init__(self, saml_response):
-        self.saml_response = saml_response
-        self.root = self.parse_xml_response(saml_response)
-        self.statements = self.get_statements(self.root)
-        self.roles = self.get_roles(self.statements)
+        self.saml_response: str = saml_response
+        self.root: ElementTree.Element = self.parse_xml_response(saml_response)
+        self.statements: List[Dict[str, List[str]]] = self.get_statements(self.root)
+        self.roles: Dict[str, AvailableRole] = self.get_roles(self.statements)
 
     namespaces = {'saml': 'urn:oasis:names:tc:SAML:2.0:assertion', 'samlp': 'urn:oasis:names:tc:SAML:2.0:protocol'}
 
-    def get_attributes(self, saml_statement: ElementTree.Element):
+    @staticmethod
+    def get_attributes(saml_statement: ElementTree.Element) -> Dict[str, List[str]]:
         result = {}
-        for attribute in saml_statement.findall('./saml:Attribute', self.namespaces):
-            value: List[ElementTree.Element] = attribute.findall('./saml:AttributeValue', self.namespaces)
+        for attribute in saml_statement.findall('./saml:Attribute', AWSSAMLAssertion.namespaces):
+            value: List[ElementTree.Element] = attribute.findall('./saml:AttributeValue', AWSSAMLAssertion.namespaces)
             result[attribute.get('Name')] = list(map(lambda v: v.text, value))
         return result
 
-    def get_statements(self, root: ElementTree.Element) -> List[ElementTree.Element]:
+    @staticmethod
+    def get_statements(root: ElementTree.Element) -> List[Dict[str, List[str]]]:
         """
-        returns all SAML attribute statements from the saml_response.
+        returns all SAML attribute values from the saml_response.
         """
-        statements = []
-        for statement in root.findall('.//saml:AttributeStatement', self.namespaces):
-            statements.append(self.get_attributes(statement))
+        statements: []
+        for statement in root.findall('.//saml:AttributeStatement', AWSSAMLAssertion.namespaces):
+            if isinstance(statement, ElementTree.Element):
+                statements.append(AWSSAMLAssertion.get_attributes(statement))
+            else:
+                logging.fatal('malformed XML: AttributeStatement {statement} is not a XML element')
         return statements
 
-    def get_roles(self, statements: List[ElementTree.Element]) -> dict:
+    @staticmethod
+    def get_roles(statements:  List[Dict[str, List[str]]]) -> Dict[str, str]:
         """
-        returns all AWS roles from the SAML attribute statements.
+        returns dictionary of AWS role ARN to AWS Provider ARN from the SAML attribute statements.
         """
         role_name = 'https://aws.amazon.com/SAML/Attributes/Role'
         roles = next(iter(map(lambda s: s[role_name], filter(lambda s: role_name in s, statements))), [])
         return {r[0]: r[1] for r in map(lambda r: r.split(','), roles)}
 
-    def parse_xml_response(self, saml_response: str) -> ElementTree.Element:
+    @staticmethod
+    def parse_xml_response(saml_response: str) -> ElementTree.Element:
         """
         returns the XML root node of the SAML response, as returned by the SAML idp.
         """
@@ -90,6 +97,7 @@ class AWSSAMLAssertion(object):
             )
         except ClientError as e:
             logging.fatal('failed to assume role {role_arn}, %s', e)
+            return
         filename = path.expanduser(path.expandvars('~/.aws/credentials'))
         config = configparser.ConfigParser()
         config.read(filename)
