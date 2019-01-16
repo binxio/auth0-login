@@ -1,3 +1,4 @@
+import re
 import logging
 from sys import stdout
 
@@ -7,6 +8,7 @@ from oauth_cli.aws.aws_console import open_aws_console
 from oauth_cli.aws.aws_saml_assertion import AWSSAMLAssertion
 from oauth_cli.config import setting
 from oauth_cli.saml.command import SAMLGetAccessTokenCommand
+from oauth_cli.aws.aws_account import AWSAccountConfiguration, AWSAccount
 
 
 class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
@@ -61,13 +63,15 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
 
 
 @click.command('aws-saml-assume-role', help=AWSSTSGetCredentialsFromSAMLCommand.__doc__)
-@click.option('--account', help='aws account number')
+@click.option('--account', help='aws account number or alias')
 @click.option('--role', help='to assume using the token')
 @click.option('--profile', help='to store the credentials under')
 @click.option('--show', is_flag=True, default=False, help='account roles available to assume')
 @click.option('--open-console', '-C', count=True, help=' after credential refresh')
 def assume_role_with_saml(account, role, profile, show, open_console):
-    cmd = AWSSTSGetCredentialsFromSAMLCommand(account, role, profile)
+
+    aws_account = AWSAccountConfiguration().get_account(account)
+    cmd = AWSSTSGetCredentialsFromSAMLCommand(aws_account.number, role, profile)
     if show:
         cmd.show_account_roles()
     else:

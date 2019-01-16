@@ -85,7 +85,8 @@ class AWSSAMLAssertion(object):
 
     def assume_role(self, role_arn, profile='default', duration=3600):
         if not role_arn or role_arn not in self.roles:
-            logging.fatal('Role {role_arn} not granted')
+            available_roles = ', '.join(self.roles.keys())
+            logging.fatal(f'Role {role_arn} not granted, choose one of {available_roles}')
 
         sts = boto3.client('sts')
         try:

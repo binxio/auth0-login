@@ -9,9 +9,6 @@ class __Setting(object):
         self.config.read([path.expanduser(path.expandvars('~/.oauth-cli.ini')), '.oauth-cli.ini'])
         self.__SECTION = 'DEFAULT'
 
-        aws_account_config = configparser.ConfigParser()
-        aws_account_config.read([path.expanduser(path.expandvars('~/.aws-accounts.ini'))])
-        self.aws_accounts = aws_account_config.defaults()
 
     @property
     def SECTION(self):
@@ -48,13 +45,6 @@ class __Setting(object):
     @property
     def exists(self):
         return self.config.has_section(self.SECTION)
-
-    def aws_account_alias(self, account) -> str:
-        """
-        returns the alias for `account` from ~/.aws-accounts.ini, or `account` if none found
-        """
-        return next(iter(filter(lambda k: str(self.aws_accounts[k]) == str(account), self.aws_accounts.keys())),
-                    str(account))
 
 
 setting = __Setting()
