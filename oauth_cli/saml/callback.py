@@ -4,13 +4,14 @@ from urllib.parse import parse_qs
 
 
 class SAMLAccessTokenCallbackHandler(BaseHTTPRequestHandler):
+    @staticmethod
     def handler(response): return print(response)
 
-    def log_message(self, format, *args):
+    def log_message(self, fmt, *args):
         logging.debug("%s - - [%s] %s\n" %
                       (self.client_address[0],
                        self.log_date_time_string(),
-                       format % args))
+                       fmt % args))
 
     def do_POST(self):
         length = int(self.headers.get('Content-Length'))

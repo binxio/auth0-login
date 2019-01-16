@@ -1,8 +1,9 @@
 import configparser
-import logging
 import re
 from collections import namedtuple
 from os import path
+
+from oauth_cli.logging import fatal
 
 AWSAccount = namedtuple('AWSAccount', 'number alias')
 
@@ -10,7 +11,7 @@ AWSAccount = namedtuple('AWSAccount', 'number alias')
 class AWSAccountConfiguration(object):
     def __init__(self):
         self.config = configparser.ConfigParser()
-        self.config.read([path.expanduser(path.expandvars('~/.aws-accounts.ini'))])
+        self.config.read([path.expanduser(path.expandvars('~/.aws-accounts'))])
         self.accounts = self.config.defaults()
 
     def alias_for_account(self, account) -> str:
@@ -32,5 +33,8 @@ class AWSAccountConfiguration(object):
         else:
             result = AWSAccount(number=self.account_for_alias(account), alias=account)
             if not result.number:
-                logging.fatal(f'{account} is not found in ~/.aws-accounts.ini')
+                fatal(f'{account} is not found in ~/.aws-accounts.ini')
         return result
+
+
+aws_accounts = AWSAccountConfiguration()

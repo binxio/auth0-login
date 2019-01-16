@@ -1,6 +1,7 @@
-import logging
 import socket
 from urllib.parse import urlparse
+
+from oauth_cli.logging import fatal
 
 
 def assert_listen_port_is_available(port: int):
@@ -9,7 +10,7 @@ def assert_listen_port_is_available(port: int):
         s.bind(('0.0.0.0', port))
         s.close()
     except socket.error as e:
-        logging.fatal('port %d is not available, %s', port, e.strerror)
+        fatal('port %d is not available, %s', port, e.strerror)
 
 
 def get_listen_port_from_url(url: str) -> int:

@@ -1,13 +1,23 @@
 import configparser
-import logging
 from os import path
+
+from oauth_cli import fatal
 
 
 class __Setting(object):
     def __init__(self):
-        self.config = configparser.ConfigParser()
-        self.config.read([path.expanduser(path.expandvars('~/.oauth-cli.ini')), '.oauth-cli.ini'])
+        self.filename = '.pcke-login'
         self.__SECTION = 'DEFAULT'
+
+    @property
+    def filename(self):
+        return self.__filename
+
+    @filename.setter
+    def filename(self, filename):
+        self.__filename = filename
+        self.config = configparser.ConfigParser()
+        self.config.read([path.expanduser(path.expandvars(f'~/{filename}')), f'{filename}'])
 
     @property
     def SECTION(self):
@@ -32,13 +42,13 @@ class __Setting(object):
     @property
     def CLIENT_ID(self):
         if not self.config.has_option(self.SECTION, 'client_id'):
-            logging.fatal('property client_id is missing from .oauth-cli.ini')
+            fatal(f'property client_id is missing from .{self.filename}')
         return self.config.get(self.SECTION, 'client_id')
 
     @property
     def IDP_URL(self):
         if not self.config.has_option(self.SECTION, 'idp_url'):
-            logging.fatal('property idl_url is missing from .oauth-cli.ini')
+            fatal(f'property client_id is missing from .{self.filename}')
         return self.config.get(self.SECTION, 'idp_url')
 
     @property

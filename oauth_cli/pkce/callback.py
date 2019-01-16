@@ -14,6 +14,7 @@ class PKCEAccessTokenCallbackHandler(BaseHTTPRequestHandler):
     token_url = None
     state = None
 
+    @staticmethod
     def handler(tokens): return print(tokens.get('access_token'))
 
     def log_message(self, fmt, *args):
@@ -43,7 +44,7 @@ class PKCEAccessTokenCallbackHandler(BaseHTTPRequestHandler):
         codes = parse_qs(urlparse(self.path).query)
         state = ''.join(codes.get('state', []))
         if state != PKCEAccessTokenCallbackHandler.state:
-            msg = f'Authentication failed! expected code for state {PKCEAccessTokenCallbackHandler.state}, received {state}.'
+            msg = f'Authentication failed! expected state {PKCEAccessTokenCallbackHandler.state}, received {state}.'
             self.write_reply(msg, logging.ERROR)
             return
 

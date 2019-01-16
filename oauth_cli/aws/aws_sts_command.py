@@ -1,14 +1,12 @@
-import re
-import logging
 from sys import stdout
 
 import click
 
+from oauth_cli import fatal, setting
+from oauth_cli.aws.aws_account import aws_accounts
 from oauth_cli.aws.aws_console import open_aws_console
 from oauth_cli.aws.aws_saml_assertion import AWSSAMLAssertion
-from oauth_cli.config import setting
-from oauth_cli.saml.command import SAMLGetAccessTokenCommand
-from oauth_cli.aws.aws_account import AWSAccountConfiguration, AWSAccount
+from oauth_cli.saml import SAMLGetAccessTokenCommand
 
 
 class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
@@ -29,7 +27,7 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
         super(AWSSTSGetCredentialsFromSAMLCommand, self).__init__()
         self.account = account if account else setting.attributes.get('aws_account')
         if not account and self.account:
-            self.account = AWSAccountConfiguration().get_account(self.account).number
+            self.account = aws_accounts.get_account(self.account).number
 
         self.role = role if role else setting.attributes.get('aws_role')
         self.profile = profile if profile else setting.attributes.get('aws_profile')
@@ -40,9 +38,8 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
         self.saml_response = AWSSAMLAssertion(saml_response)
 
     def print_roles(self):
-        account_config = AWSAccountConfiguration()
         for role in self.saml_response.available_roles():
-            account = account_config.get_account(role.account)
+            account = aws_accounts.get_account(role.account)
             stdout.write(f'[{role.name}@{account.alias}]\n')
             stdout.write(f'idp_url = {setting.IDP_URL}\n')
             stdout.write(f'client_id = {setting.CLIENT_ID}\n')
@@ -63,10 +60,10 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
             if self.open_console:
                 open_aws_console(self.profile)
         else:
-            logging.fatal('--account, --role and --profile are required.')
+            fatal('--account, --role and --profile are required.')
 
 
-@click.command('aws-saml-assume-role', help=AWSSTSGetCredentialsFromSAMLCommand.__doc__)
+@click.command('aws-assume-role', help=AWSSTSGetCredentialsFromSAMLCommand.__doc__)
 @click.option('--account', help='aws account number or alias')
 @click.option('--role', help='to assume using the token')
 @click.option('--profile', help='to store the credentials under')
@@ -74,7 +71,7 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
 @click.option('--open-console', '-C', count=True, help=' after credential refresh')
 def assume_role_with_saml(account, role, profile, show, open_console):
 
-    aws_account = AWSAccountConfiguration().get_account(account).number if account else None
+    aws_account = aws_accounts.get_account(account).number if account else None
     cmd = AWSSTSGetCredentialsFromSAMLCommand(aws_account, role, profile)
     if show:
         cmd.show_account_roles()

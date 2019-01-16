@@ -11,9 +11,9 @@ from uuid import uuid4
 
 import click
 
-from oauth_cli.config import setting
+from oauth_cli import fatal, setting
 from oauth_cli.pkce.callback import PKCEAccessTokenCallbackHandler
-from oauth_cli.util import get_listen_port_from_url, assert_listen_port_is_available
+from oauth_cli.util import assert_listen_port_is_available, get_listen_port_from_url
 
 
 class PKCEGetIdTokenCommand(object):
@@ -96,7 +96,7 @@ class PKCEGetIdTokenCommand(object):
         if self.tokens:
             json.dump(self.tokens, stdout)
         else:
-            logging.fatal('no token retrieved')
+            fatal('no token retrieved')
 
 
 class PKCEGetAccessTokenCommand(PKCEGetIdTokenCommand):
@@ -127,7 +127,7 @@ class PKCEGetAccessTokenCommand(PKCEGetIdTokenCommand):
 
     def run(self):
         if not self.audience:
-            logging.fatal('audience is required')
+            fatal('audience is required')
         super(PKCEGetAccessTokenCommand, self).run()
 
 

@@ -1,13 +1,11 @@
 import json
-import logging
-import sys
 import webbrowser
 
 import requests
 from boto3 import Session
 from botocore.credentials import ReadOnlyCredentials
 
-from oauth_cli.config import setting
+from oauth_cli import fatal, setting
 
 
 def open_aws_console(profile: str):
@@ -20,7 +18,7 @@ def open_aws_console(profile: str):
                             params={'Action': 'getSigninToken', 'SessionDuration': setting.ROLE_DURATION,
                                     'Session': json.dumps(creds)})
     if response.status_code != 200:
-        logging.fatal(response.text)
+        fatal(response.text)
 
     signin_token = response.json()['SigninToken']
     params = {'Action': 'login', 'Issuer': 'awslogin', 'Destination': 'https://console.aws.amazon.com/',

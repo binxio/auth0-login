@@ -12,7 +12,7 @@ setup(
     license='Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)',
     author='Mark van Holsteijn',
     author_email='mark@binx.io',
-    description='utility to obtain an JWT access token using OAuth PKCE flow',
+    description='obtain JWT, SAML tokens, and AWS credentials using Auth0, OAuth and SAML',
     long_description=__doc__,
     packages=find_packages(exclude=['tests']),
     include_package_data=True,
@@ -23,7 +23,8 @@ setup(
     test_suite='tests',
     entry_points={
         'console_scripts': [
-            'oauth-cli = oauth_cli.__main__:cli',
+            'saml-login = oauth_cli.saml.__main__:cli',
+            'pkce-login = oauth_cli.pkce.__main__:cli',
         ],
     },
     classifiers=[

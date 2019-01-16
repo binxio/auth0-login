@@ -1,12 +1,11 @@
-import logging
 import webbrowser
 from http.server import HTTPServer
 
 import click
 
-from oauth_cli.config import setting
+from oauth_cli import fatal, setting
 from oauth_cli.saml.callback import SAMLAccessTokenCallbackHandler
-from oauth_cli.util import get_listen_port_from_url, assert_listen_port_is_available
+from oauth_cli.util import assert_listen_port_is_available, get_listen_port_from_url
 
 
 class SAMLGetAccessTokenCommand(object):
@@ -59,10 +58,10 @@ class SAMLGetAccessTokenCommand(object):
         if self.saml_response:
             print(self.saml_response)
         else:
-            logging.fatal('no SAML response retrieved')
+            fatal('no SAML response retrieved')
 
 
-@click.command('get-saml-token', help=SAMLGetAccessTokenCommand.__doc__)
+@click.command('get-token', help=SAMLGetAccessTokenCommand.__doc__)
 def get_saml_token():
     cmd = SAMLGetAccessTokenCommand()
     cmd.run()

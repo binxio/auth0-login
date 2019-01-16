@@ -5,11 +5,13 @@ import logging
 import re
 from collections import namedtuple
 from os import chmod, path
-from typing import List, Pattern, Dict
+from typing import Dict, List, Pattern
 from xml.etree import ElementTree
 
 import boto3
 from botocore.exceptions import ClientError
+
+from oauth_cli import fatal
 
 AvailableRole = namedtuple('AvailableRole', 'provider account name arn')
 
@@ -42,7 +44,7 @@ class AWSSAMLAssertion(object):
             if isinstance(statement, ElementTree.Element):
                 statements.append(AWSSAMLAssertion.get_attributes(statement))
             else:
-                logging.fatal('malformed XML: AttributeStatement {statement} is not a XML element')
+                fatal('malformed XML: AttributeStatement {statement} is not a XML element')
         return statements
 
     @staticmethod
@@ -65,9 +67,9 @@ class AWSSAMLAssertion(object):
             logging.debug(xml)
             result = ElementTree.fromstring(xml)
         except binascii.Error as e:
-            logging.fatal('failed to parse the SAML response, %s', e)
+            fatal('failed to parse the SAML response, %s', e)
         except ElementTree.ParseError as e:
-            logging.fatal('failed to parse the SAML response, %s', e.msg)
+            fatal('failed to parse the SAML response, %s', e.msg)
         return result
 
     role_arn_pattern: Pattern = re.compile(r'arn:aws:iam::(?P<account>[^:]*):role/(?P<name>.*)')
@@ -80,13 +82,13 @@ class AWSSAMLAssertion(object):
                 result.append(AvailableRole(arn=role, provider=self.roles[role], account=match.group('account'),
                                             name=match.group('name')))
             else:
-                logging.fatal('expected a role arn, found %s', role)
+                fatal('expected a role arn, found %s', role)
         return result
 
     def assume_role(self, role_arn, profile='default', duration=3600):
         if not role_arn or role_arn not in self.roles:
             available_roles = ', '.join(self.roles.keys())
-            logging.fatal(f'Role {role_arn} not granted, choose one of {available_roles}')
+            fatal(f'Role {role_arn} not granted, choose one of {available_roles}')
 
         sts = boto3.client('sts')
         try:
@@ -97,7 +99,7 @@ class AWSSAMLAssertion(object):
                 DurationSeconds=duration
             )
         except ClientError as e:
-            logging.fatal('failed to assume role {role_arn}, %s', e)
+            fatal('failed to assume role {role_arn}, %s', e)
             return
         filename = path.expanduser(path.expandvars('~/.aws/credentials'))
         config = configparser.ConfigParser()
