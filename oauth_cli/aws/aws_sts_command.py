@@ -37,7 +37,7 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
     def print_roles(self):
         for role in self.saml_response.available_roles():
             alias = setting.aws_account_alias(role.account)
-            stdout.write(f'[{role.name}@{alias}\n')
+            stdout.write(f'[{role.name}@{alias}]\n')
             stdout.write(f'idp_url = {setting.IDP_URL}\n')
             stdout.write(f'client_id = {setting.CLIENT_ID}\n')
             stdout.write(f'aws_account = {role.account}\n')
