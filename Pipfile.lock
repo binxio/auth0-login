@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "911712d1de3d542f8e08900ece4ebe7e9486974e6af63df023ff1a90027861e2"
+            "sha256": "029aa01869e338d6fc7b9e89f555f7ade02eda0ab242d8f5a41c76363049f601"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,19 +16,23 @@
         ]
     },
     "default": {
+        "auth0-login": {
+            "editable": true,
+            "path": "."
+        },
         "boto3": {
             "hashes": [
-                "sha256:8f02aebdbb274d1be3af1e6c117865afa97a34a6810a304e079beab5827c7614",
-                "sha256:b131da6494d5036a2768fcea56fb9891bff7eb6b8faaa7dce93e939f50382b1c"
+                "sha256:2aae5d59a1e463056c1db531c9a26605176a5dbb8c0134c7dfdd288d9d7d2267",
+                "sha256:a75462a89808130b0e74dffffe8d9f851f8c5f6f68c016938addc84397ba6953"
             ],
-            "version": "==1.9.78"
+            "version": "==1.9.79"
         },
         "botocore": {
             "hashes": [
-                "sha256:2cdf5519ddab95774248a002c24fbd804b5e5b44ed1c25497d34b34a06e9f84a",
-                "sha256:bd0b042dded14c7b2978d13dd8088f10f05f9e12382e882e03694e9131185358"
+                "sha256:8d87d5ff0c3ce5515d00579168c61544b735705121d4fdf94291e0b4e9a0339a",
+                "sha256:ba2f8c353a3e34cc5c750fef7716d31068c866d4b3b29142b891ce7a55ba7804"
             ],
-            "version": "==1.12.78"
+            "version": "==1.12.79"
         },
         "certifi": {
             "hashes": [
@@ -72,10 +76,6 @@
                 "sha256:f11b4461f425740a1d908e9a3f7365c3d2e569f6ca68a2ff8bc5bcd9676edd63"
             ],
             "version": "==0.9.3"
-        },
-        "oauth-cli": {
-            "editable": true,
-            "path": "."
         },
         "pyjwt": {
             "hashes": [

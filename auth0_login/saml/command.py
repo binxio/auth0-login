@@ -17,7 +17,7 @@ class SAMLGetAccessTokenCommand(object):
     is `http://localhost:{listen_port}/saml`.
 
     you can configure the `listen_port`, `idp_url` and
-    `client_id` in the .oauth-cli.ini.
+    `client_id` in the configuration file.
     """
 
     def __init__(self):

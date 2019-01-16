@@ -3,7 +3,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-oauth-cli = {editable = true, path = "."}
+auth0_login = {editable = true, path = "."}
 
 [dev-packages]
 
