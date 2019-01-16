@@ -5,7 +5,8 @@ import click
 
 from oauth_cli.config import setting
 from oauth_cli.pkce import get_access_token, get_id_token
-from oauth_cli.saml import assume_role_with_saml, get_saml_token
+from oauth_cli.saml import get_saml_token
+from oauth_cli.aws import assume_role_with_saml
 
 
 def myfatal(msg, *args, **kwargs):

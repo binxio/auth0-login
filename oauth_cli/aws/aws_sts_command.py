@@ -12,7 +12,7 @@ import boto3
 import click
 
 from oauth_cli.config import setting
-from oauth_cli.util import open_aws_console
+from oauth_cli.aws.aws_console import open_aws_console
 from oauth_cli.saml.command import SAMLGetAccessTokenCommand
 
 
