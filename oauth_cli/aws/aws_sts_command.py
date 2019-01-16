@@ -28,6 +28,9 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
     def __init__(self, account, role, profile):
         super(AWSSTSGetCredentialsFromSAMLCommand, self).__init__()
         self.account = account if account else setting.attributes.get('aws_account')
+        if not account and self.account:
+            self.account = AWSAccountConfiguration().get_account(self.account).number
+
         self.role = role if role else setting.attributes.get('aws_role')
         self.profile = profile if profile else setting.attributes.get('aws_profile')
         self.open_console = setting.attributes.get('aws_console', False)
@@ -37,14 +40,15 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
         self.saml_response = AWSSAMLAssertion(saml_response)
 
     def print_roles(self):
+        account_config = AWSAccountConfiguration()
         for role in self.saml_response.available_roles():
-            alias = setting.aws_account_alias(role.account)
-            stdout.write(f'[{role.name}@{alias}]\n')
+            account = account_config.get_account(role.account)
+            stdout.write(f'[{role.name}@{account.alias}]\n')
             stdout.write(f'idp_url = {setting.IDP_URL}\n')
             stdout.write(f'client_id = {setting.CLIENT_ID}\n')
-            stdout.write(f'aws_account = {role.account}\n')
+            stdout.write(f'aws_account = {account.alias}\n')
             stdout.write(f'aws_role = {role.name}\n')
-            stdout.write(f'aws_profile = {role.name}@{alias}\n\n')
+            stdout.write(f'aws_profile = {role.name}@{account.alias}\n\n')
 
     def show_account_roles(self):
         self.request_authorization()
@@ -70,8 +74,8 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
 @click.option('--open-console', '-C', count=True, help=' after credential refresh')
 def assume_role_with_saml(account, role, profile, show, open_console):
 
-    aws_account = AWSAccountConfiguration().get_account(account)
-    cmd = AWSSTSGetCredentialsFromSAMLCommand(aws_account.number, role, profile)
+    aws_account = AWSAccountConfiguration().get_account(account).number if account else None
+    cmd = AWSSTSGetCredentialsFromSAMLCommand(aws_account, role, profile)
     if show:
         cmd.show_account_roles()
     else:
