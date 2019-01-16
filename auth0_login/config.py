@@ -53,7 +53,7 @@ class __Setting(object):
 
     @property
     def exists(self):
-        return self.config.has_section(self.SECTION)
+        return self.SECTION == 'DEFAULT' or self.config.has_section(self.SECTION)
 
 
 setting = __Setting()
