@@ -9,7 +9,6 @@ class __Setting(object):
         self.config.read([path.expanduser(path.expandvars('~/.oauth-cli.ini')), '.oauth-cli.ini'])
         self.__SECTION = 'DEFAULT'
 
-
     @property
     def SECTION(self):
         return self.__SECTION
