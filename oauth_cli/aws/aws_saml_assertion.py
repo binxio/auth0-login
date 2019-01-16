@@ -37,7 +37,7 @@ class AWSSAMLAssertion(object):
         """
         returns all SAML attribute values from the saml_response.
         """
-        statements: []
+        statements = []
         for statement in root.findall('.//saml:AttributeStatement', AWSSAMLAssertion.namespaces):
             if isinstance(statement, ElementTree.Element):
                 statements.append(AWSSAMLAssertion.get_attributes(statement))
