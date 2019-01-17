@@ -4,8 +4,8 @@ import click
 
 from auth0_login import fatal, setting
 from auth0_login.aws.credentials import write_aws_credentials
-from auth0_login.aws.aws_account import aws_accounts
-from auth0_login.aws.aws_saml_assertion import AWSSAMLAssertion
+from auth0_login.aws.account import aws_accounts
+from auth0_login.aws.saml_assertion import AWSSAMLAssertion
 from auth0_login.saml import SAMLGetAccessTokenCommand
 
 

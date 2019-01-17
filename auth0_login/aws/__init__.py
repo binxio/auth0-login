@@ -1,2 +1,2 @@
-from auth0_login.aws.aws_sts_command import assume_role_with_saml
+from auth0_login.aws.sts_command import assume_role_with_saml
 from auth0_login.aws.aws_cognito_command import get_cognito_credentials_for_identity
