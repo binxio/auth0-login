@@ -11,7 +11,7 @@ dependencies = ['boto3', 'pyjwt', 'click', 'requests']
 
 setup(
     name='auth0-login',
-    version="0.4.2",
+    version="0.4.3",
     url='https://github.com/binxio/auth0-login',
     license='Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)',
     author='Mark van Holsteijn',
