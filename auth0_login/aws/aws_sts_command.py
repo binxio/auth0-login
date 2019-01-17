@@ -3,8 +3,8 @@ from sys import stdout
 import click
 
 from auth0_login import fatal, setting
+from auth0_login.aws.credentials import write_aws_credentials
 from auth0_login.aws.aws_account import aws_accounts
-from auth0_login.aws.aws_console import open_aws_console
 from auth0_login.aws.aws_saml_assertion import AWSSAMLAssertion
 from auth0_login.saml import SAMLGetAccessTokenCommand
 
@@ -51,16 +51,18 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
         self.request_authorization()
         self.print_roles()
 
+    @property
+    def role_arn(self):
+        return f'arn:aws:iam::{self.account}:role/{self.role}'
+
     def run(self):
-        if self.account and self.role and self.profile:
-            self.request_authorization()
-            self.saml_response.assume_role(role_arn=f'arn:aws:iam::{self.account}:role/{self.role}',
-                                           profile=self.profile,
-                                           duration=setting.ROLE_DURATION)
-            if self.open_console:
-                open_aws_console(self.profile)
-        else:
+        if not (self.account and self.role and self.profile):
             fatal('--account, --role and --profile are required.')
+
+        self.request_authorization()
+
+        credentials = self.saml_response.assume_role(self.role_arn, setting.ROLE_DURATION)
+        write_aws_credentials(credentials, self.profile)
 
 
 @click.command('aws-assume-role', help=AWSSTSGetCredentialsFromSAMLCommand.__doc__)

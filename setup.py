@@ -1,6 +1,10 @@
 """
 CLI for obtaining JWT access tokens using the PKCE flow
 """
+import sys
+if sys.version_info < (3,6):
+    sys.exit('Sorry, Python < 3.6 is not supported')
+
 from setuptools import find_packages, setup
 
 dependencies = ['boto3', 'pyjwt', 'click', 'requests']
@@ -21,6 +25,7 @@ setup(
     install_requires=dependencies,
     tests_require=dependencies + ['pytest'],
     test_suite='tests',
+    python_requires='>=3.6',
     entry_points={
         'console_scripts': [
             'saml-login = auth0_login.saml.__main__:cli',

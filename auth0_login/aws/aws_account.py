@@ -1,7 +1,7 @@
 import configparser
 import re
 from collections import namedtuple
-from os import path
+from os import path, chmod
 
 from auth0_login.logging import fatal
 
@@ -35,6 +35,8 @@ class AWSAccountConfiguration(object):
             if not result.number:
                 fatal(f'{account} is not found in ~/.aws-accounts.ini')
         return result
+
+
 
 
 aws_accounts = AWSAccountConfiguration()

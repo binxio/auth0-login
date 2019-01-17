@@ -1,10 +1,8 @@
 import base64
 import binascii
-import configparser
 import logging
 import re
 from collections import namedtuple
-from os import chmod, path
 from typing import Dict, List, Pattern
 from xml.etree import ElementTree
 
@@ -12,6 +10,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 from auth0_login import fatal
+from auth0_login.aws.credentials import AWSCredentials
 
 AvailableRole = namedtuple('AvailableRole', 'provider account name arn')
 
@@ -85,7 +84,7 @@ class AWSSAMLAssertion(object):
                 fatal('expected a role arn, found %s', role)
         return result
 
-    def assume_role(self, role_arn, profile='default', duration=3600):
+    def assume_role(self, role_arn: str, duration: int = 3600) -> AWSCredentials:
         if not role_arn or role_arn not in self.roles:
             available_roles = ', '.join(self.roles.keys())
             fatal(f'Role {role_arn} not granted, choose one of {available_roles}')
@@ -100,18 +99,39 @@ class AWSSAMLAssertion(object):
             )
         except ClientError as e:
             fatal('failed to assume role {role_arn}, %s', e)
-            return
-        filename = path.expanduser(path.expandvars('~/.aws/credentials'))
-        config = configparser.ConfigParser()
-        config.read(filename)
-        if not config.has_section(profile):
-            config.add_section(profile)
-        config.set(profile, 'aws_access_key_id', response['Credentials']['AccessKeyId'])
-        config.set(profile, 'aws_secret_access_key', response['Credentials']['SecretAccessKey'])
-        config.set(profile, 'aws_session_token', response['Credentials']['SessionToken'])
-        config.set(profile, 'expiration', str(response['Credentials']['Expiration']))
-        with open(filename, 'w') as f:
-            config.write(f)
-        chmod(filename, 0o600)
-        logging.info(
-            f'credentials for role {role_arn} saved under AWS profile {profile}.')
+
+        c = response['Credentials']
+        return AWSCredentials(access_key=c['AccessKeyId'], secret_key=c['SecretAccessKey'], session_token=c['SessionToken'], expiration=c['Expiration'])
+
+
+    def get_cognito_id(self, account: str, identity_pool: str) -> str:
+        provider = self.roles.get(next(iter(self.roles.keys()), None))
+        cognito = boto3.client('cognito-identity')
+        try:
+            response = cognito.get_id(
+                IdentityPoolId=identity_pool,
+                Logins={provider: self.saml_response}
+            )
+            return response['IdentityId']
+        except ClientError as e:
+            fatal('failed to get cognito identity from {identity_pool}, %s', e)
+
+
+    def get_cognito_credentials_for_identity(self, identity:str, role_arn: str) -> AWSCredentials:
+        if not role_arn or role_arn not in self.roles:
+            available_roles = ', '.join(self.roles.keys())
+            fatal(f'Role {role_arn} not granted, choose one of {available_roles}')
+
+        cognito = boto3.client('cognito-identity')
+        try:
+            # TODO: find out why this does not work.
+            response = cognito.get_credentials_for_identity(
+                IdentityId=identity,
+                CustomRoleArn=role_arn,
+                Logins={self.roles[role_arn]: self.saml_response}
+            )
+        except ClientError as e:
+            fatal(f'failed to get credentials for identity {identity} in role {role_arn}, %s', e)
+
+        c = response['Credentials']
+        return AWSCredentials(access_key=c['AccessKeyId'], secret_key=c['SecretKey'], session_token=c['SessionToken'], expiration=c['Expiration'])
