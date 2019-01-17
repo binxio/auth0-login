@@ -27,16 +27,16 @@ SHELL=/bin/bash
 
 build: pre-build do-build post-build
 
-pre-build: venv
+pre-build:
 
 
 post-build:
 
 
 do-build: 
-	. venv/bin/activate && python setup.py check
-	. venv/bin/activate && python setup.py build
-	. venv/bin/activate && python setup.py test
+	pipenv run python setup.py check
+	pipenv run python setup.py build
+	pipenv run python setup.py test
 
 .release:
 	@echo "release=0.0.0" > .release
@@ -52,8 +52,8 @@ upload: do-upload post-upload
 
 do-upload: 
 	rm -rf dist/*
-	. venv/bin/activate && python setup.py sdist
-	. venv/bin/activate && twine upload dist/*
+	pipenv run python setup.py sdist
+	pipenv run twine upload dist/*
 
 snapshot: build upload
 
@@ -95,14 +95,8 @@ check-release: .release
 	@. $(RELEASE_SUPPORT) ; tagExists $(TAG) || (echo "ERROR: version not yet tagged in git. make [minor,major,patch]-release." >&2 && exit 1) ;
 	@. $(RELEASE_SUPPORT) ; ! differsFromRelease $(TAG) || (echo "ERROR: current directory differs from tagged $(TAG). make [minor,major,patch]-release." ; exit 1)
 
-venv: 
-	virtualenv -p python3 venv  && \
-        . ./venv/bin/activate && \
-        pip --quiet install --upgrade pip  && \
-	pip install --upgrade setuptools twine
-
 clean:
-	python setup.py clean
+	pipenv run python setup.py clean
 	rm -rf build/* dist/*  *.egg-info
 
 clobber: clean
