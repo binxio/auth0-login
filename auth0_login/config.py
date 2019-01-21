@@ -57,13 +57,13 @@ class __Setting(object):
     @property
     def CLIENT_ID(self):
         if not self.config.has_option(self.SECTION, 'client_id'):
-            fatal(f'property client_id is missing from .{self.filename}')
+            fatal(f'property client_id is missing from ~/{self.filename}')
         return self.config.get(self.SECTION, 'client_id')
 
     @property
     def IDP_URL(self):
         if not self.config.has_option(self.SECTION, 'idp_url'):
-            fatal(f'property client_id is missing from .{self.filename}')
+            fatal(f'property client_id is missing from ~/{self.filename}')
         return self.config.get(self.SECTION, 'idp_url')
 
     @property
