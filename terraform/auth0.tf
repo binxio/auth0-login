@@ -58,7 +58,7 @@ resource "auth0_rule" "grant-admin" {
   name = "grant aws admin role to all from ${var.aws_profile}"
 
   /* Note, this script grants both roles to everybody. You may want to grant roles
-           based on group memberships or role. */
+               based on group memberships or role. */
   script = <<EOF
 function (user, context, callback) {
 
@@ -78,11 +78,24 @@ EOF
   enabled = true
 }
 
+/* fixed in PR https://github.com/terraform-providers/terraform-provider-http/pull/16
 data "http" "auth0-saml-metadata" {
   url = "https://${var.auth0_domain}/samlp/metadata/${auth0_client.auth0-cli.client_id}"
 
   request_headers {
     "Accept" = "application/xml"
+  }
+}
+*/
+
+data "local_file" "auth0-saml-metadata" {
+  filename   = ".saml-metadata.xml"
+  depends_on = ["null_resource.auth0-saml-metadata"]
+}
+
+resource "null_resource" "auth0-saml-metadata" {
+  provisioner "local-exec" {
+    command = "curl -L -sS --fail -o .saml-metadata.xml https://${var.auth0_domain}/samlp/metadata/${auth0_client.auth0-cli.client_id}"
   }
 }
 

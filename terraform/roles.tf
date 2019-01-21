@@ -5,7 +5,9 @@ resource "aws_iam_role" "OAuthAdministrator" {
 
 resource "aws_iam_role_policy_attachment" "OAuthAdministrator" {
   role       = "${aws_iam_role.OAuthAdministrator.name}"
-  policy_arn = "arn:aws:iam::aws:policy/PowerUserAccess"
+  policy_arn = "${aws_iam_policy.OAuthIdentity.arn}"
+
+  # policy_arn = "arn:aws:iam::aws:policy/PowerUserAccess" # for security reasons disabled
 }
 
 resource "aws_iam_role" "OAuthIdentity" {
@@ -50,5 +52,5 @@ data "aws_iam_policy_document" "auth0_assume_role_policy" {
 
 resource "aws_iam_saml_provider" "auth0-provider" {
   name                   = "auth0-${replace(var.auth0_domain,".","-")}-provider"
-  saml_metadata_document = "${data.http.auth0-saml-metadata.body}"
+  saml_metadata_document = "${data.local_file.auth0-saml-metadata.content}"
 }
