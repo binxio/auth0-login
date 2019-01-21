@@ -26,7 +26,7 @@ auth0_client_secret = "<api explorer client secret>"
 ```
 
 ## run terraform
-To provision SSO, type:
+To provision SSO for AWS, type:
 
 ```
 $ terraform init
