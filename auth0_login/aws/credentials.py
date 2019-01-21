@@ -19,15 +19,10 @@ def write_aws_credentials(credentials: AWSCredentials, profile: str):
     else:
         config.remove_option(profile, 'aws_session_token')
     if credentials.expiration:
-        config.set(profile, 'expiration', credentials.expiration)
+        config.set(profile, 'expiration', f'credentials.expiration')
     else:
         config.remove_option(profile, 'expiration')
     with open(filename, 'w') as f:
         config.write(f)
     chmod(filename, 0o600)
     logging.info(f'credentials for role {role_arn} saved under AWS profile {profile}.')
-
-
-
-
-
