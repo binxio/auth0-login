@@ -1,7 +1,7 @@
-resource "auth0_client" "oauth-cli" {
-  name        = "oauth-cli"
+resource "auth0_client" "auth0-cli" {
+  name        = "auth0-login"
   description = "CLI for obtaining JWT and SAML access tokens"
-  app_type    = "native"
+  app_type    = "spa"
 
   grant_types = [
     "authorization_code",
@@ -79,17 +79,39 @@ EOF
 }
 
 data "http" "auth0-saml-metadata" {
-  url = "https://${var.auth0_domain}/samlp/metadata/${auth0_client.oauth-cli.client_id}"
+  url = "https://${var.auth0_domain}/samlp/metadata/${auth0_client.auth0-cli.client_id}"
 
   request_headers {
     "Accept" = "application/xml"
   }
 }
 
-output "oauth-cli.ini" {
-  value = "\n[${var.auth0_domain}]\nidp_url = https://${var.auth0_domain}\nclient_id = ${auth0_client.oauth-cli.client_id}\n"
+output ".saml-login" {
+  value = <<EOF
+[DEFAULT]
+idp_url = https://${var.auth0_domain}
+client_id = ${auth0_client.auth0-cli.client_id}
+
+[administrator@${data.aws_iam_account_alias.current.account_alias}]
+idp_url = https://${var.auth0_domain}
+client_id = ${auth0_client.auth0-cli.client_id}
+aws_profile = administrator@${data.aws_iam_account_alias.current.account_alias}
+aws_role = OAuthAdministrator
+aws_account = ${data.aws_iam_account_alias.current.account_alias}
+
+[identity@${data.aws_iam_account_alias.current.account_alias}]
+idp_url = https://${var.auth0_domain}
+client_id = ${auth0_client.auth0-cli.client_id}
+aws_profile = identity@${data.aws_iam_account_alias.current.account_alias}
+aws_role = OAuthIdentity
+aws_account = ${data.aws_iam_account_alias.current.account_alias}
+
+EOF
 }
 
-output "assume-role-with-saml" {
-  value = "\naws --profile ${var.aws_profile} sts assume-role-with-saml \\\n\t--role-arn ${aws_iam_role.OAuthAdministrator.arn} \\\n\t--principal-arn ${aws_iam_saml_provider.auth0-provider.arn} \\\n\t--saml-assertion \"$SAML_RESPONSE\""
+output ".aws-accounts" {
+  value = <<EOF
+[DEFAULT]
+${data.aws_iam_account_alias.current.account_alias} = ${data.aws_caller_identity.current.account_id}
+EOF
 }
