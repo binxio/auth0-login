@@ -25,4 +25,4 @@ def write_aws_credentials(credentials: AWSCredentials, profile: str):
     with open(filename, 'w') as f:
         config.write(f)
     chmod(filename, 0o600)
-    logging.info(f'credentials for role {role_arn} saved under AWS profile {profile}.')
+    logging.info(f'credentials saved under AWS profile {profile}.')
