@@ -16,7 +16,7 @@ resource "aws_iam_role" "OAuthIdentity" {
 data "aws_iam_policy_document" "OAuthIdentity" {
   statement {
     actions   = ["sts:GetCallerIdentity"]
-    resources = [ "*" ]
+    resources = ["*"]
   }
 }
 

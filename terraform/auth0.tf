@@ -19,8 +19,8 @@ resource "auth0_client" "oauth-cli" {
 
   callbacks = [
     "http://localhost:12200/saml",
-    "https://signin.aws.amazon.com/saml",
     "http://localhost:12200/callback",
+    "https://signin.aws.amazon.com/saml",
   ]
 
   addons = {
@@ -57,6 +57,8 @@ resource "auth0_client" "oauth-cli" {
 resource "auth0_rule" "grant-admin" {
   name = "grant aws admin role to all from ${var.aws_profile}"
 
+  /* Note, this script grants both roles to everybody. You may want to grant roles
+           based on group memberships or role. */
   script = <<EOF
 function (user, context, callback) {
 
