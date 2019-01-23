@@ -116,8 +116,11 @@ class AWSSAMLAssertion(object):
             fatal('failed to assume role {role_arn}, %s', e)
 
         c = response['Credentials']
-        return AWSCredentials(access_key=c['AccessKeyId'], secret_key=c['SecretAccessKey'], session_token=c['SessionToken'], expiration=c['Expiration'])
-
+        return AWSCredentials(
+            access_key=c['AccessKeyId'],
+            secret_key=c['SecretAccessKey'],
+            session_token=c['SessionToken'],
+            expiration=c['Expiration'])
 
     def get_cognito_id(self, account: str, identity_pool: str) -> str:
         provider = self.roles.get(next(iter(self.roles.keys()), None))
@@ -131,8 +134,7 @@ class AWSSAMLAssertion(object):
         except ClientError as e:
             fatal('failed to get cognito identity from {identity_pool}, %s', e)
 
-
-    def get_cognito_credentials_for_identity(self, identity:str, role_arn: str) -> AWSCredentials:
+    def get_cognito_credentials_for_identity(self, identity: str, role_arn: str) -> AWSCredentials:
         if not role_arn or role_arn not in self.roles:
             available_roles = ', '.join(self.roles.keys())
             fatal(f'Role {role_arn} not granted, choose one of {available_roles}')
@@ -149,4 +151,8 @@ class AWSSAMLAssertion(object):
             fatal(f'failed to get credentials for identity {identity} in role {role_arn}, %s', e)
 
         c = response['Credentials']
-        return AWSCredentials(access_key=c['AccessKeyId'], secret_key=c['SecretKey'], session_token=c['SessionToken'], expiration=c['Expiration'])
+        return AWSCredentials(
+            access_key=c['AccessKeyId'],
+            secret_key=c['SecretKey'],
+            session_token=c['SessionToken'],
+            expiration=c['Expiration'])

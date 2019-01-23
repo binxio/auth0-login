@@ -52,6 +52,4 @@ class AWSAccountConfiguration(object):
         return result
 
 
-
-
 aws_accounts = AWSAccountConfiguration()

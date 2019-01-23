@@ -18,6 +18,7 @@ from sys import stdout
 import click
 
 from auth0_login import fatal, setting
+from auth0_login.aws.console import open_aws_console
 from auth0_login.aws.credentials import write_aws_credentials
 from auth0_login.aws.account import aws_accounts
 from auth0_login.aws.saml_assertion import AWSSAMLAssertion
@@ -78,6 +79,8 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
 
         credentials = self.saml_response.assume_role(self.role_arn, setting.ROLE_DURATION)
         write_aws_credentials(credentials, self.profile)
+        if self.open_console:
+            open_aws_console(self.profile)
 
 
 @click.command('aws-assume-role', help=AWSSTSGetCredentialsFromSAMLCommand.__doc__)
