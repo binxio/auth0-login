@@ -45,6 +45,7 @@ setup(
         'console_scripts': [
             'saml-login = auth0_login.saml.__main__:cli',
             'pkce-login = auth0_login.pkce.__main__:cli',
+            'aws-console = auth0_login.aws.__main__:cli',
         ],
     },
     classifiers=[
