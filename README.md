@@ -88,5 +88,15 @@ INFO:credentials saved under AWS profile OAuthAdministrator@aws-alias
 ```
 Again you will be prompted by the the browser for authentication: the access keys are stored in `~/.aws/credentials`. 
 
+## Access the AWS console
+There are two ways to open the AWS console:
+```
+$ saml-login -c OAuthAdministrator@aws-alias aws-assume-role --open-console
+```
+or using the credentials obtained earlier:
+```
+$ aws-console --profile OAuthAdministrator@aws-alias 
+```
+
 ## Conclusion
 With the command line utility, you can have SSO *and* temporary access keys for AWS using Auth0!
