@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from auth0_login.aws.console import open_aws_console as cli
+from auth0_login.aws.console import main as cli
 
 if __name__ == '__main__':
     cli()

@@ -24,8 +24,6 @@ from botocore.credentials import ReadOnlyCredentials
 from auth0_login import fatal, setting
 
 
-@click.command('aws-console', help='open AWS console from profile')
-@click.option('--profile', required=True, help='to store the credentials under')
 def open_aws_console(profile: str):
     """
     opens the AWS console for the specified profile.
@@ -47,3 +45,9 @@ def open_aws_console(profile: str):
     console = requests.Request('GET', 'https://signin.aws.amazon.com/federation', params=params)
     prepared_link = console.prepare()
     webbrowser.open(prepared_link.url, new=1)
+
+@click.command('aws-console', help='open AWS console from profile')
+@click.option('--profile', required=True, help='to store the credentials under')
+def main(profile):
+    open_aws_console(profile)
+
