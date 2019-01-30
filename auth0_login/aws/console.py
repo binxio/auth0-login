@@ -15,6 +15,7 @@
 #
 import json
 import click
+import logging
 import webbrowser
 
 import requests
@@ -33,6 +34,7 @@ def open_aws_console(profile: str):
         fatal('cannot generated a console signin URL from credentials without a session token')
 
     creds = {'sessionId': c.access_key, 'sessionKey': c.secret_key, 'sessionToken': c.token}
+    logging.debug('obtaining AWS console signin token')
     response = requests.get("https://signin.aws.amazon.com/federation",
                             params={'Action': 'getSigninToken', 'SessionDuration': setting.ROLE_DURATION,
                                     'Session': json.dumps(creds)})
@@ -42,12 +44,15 @@ def open_aws_console(profile: str):
     signin_token = response.json()['SigninToken']
     params = {'Action': 'login', 'Issuer': 'awslogin', 'Destination': 'https://console.aws.amazon.com/',
               'SigninToken': signin_token}
+    logging.debug('opening AWS console')
     console = requests.Request('GET', 'https://signin.aws.amazon.com/federation', params=params)
     prepared_link = console.prepare()
-    webbrowser.open(prepared_link.url, new=1)
+    webbrowser.open(prepared_link.url)
 
 @click.command('aws-console', help='open AWS console from profile')
+@click.option('--verbose', is_flag=True, default=False, help=' for tracing purposes')
 @click.option('--profile', required=True, help='to store the credentials under')
-def main(profile):
+def main(verbose, profile):
+    logging.basicConfig(format='%(levelname)s:%(message)s', level=(logging.DEBUG if verbose else logging.INFO))
     open_aws_console(profile)
 
