@@ -21,25 +21,43 @@ import webbrowser
 import requests
 from boto3 import Session
 from botocore.credentials import ReadOnlyCredentials
+from botocore.exceptions import ClientError
 
 from auth0_login import fatal, setting
 
+
+def get_federated_credentials(session: Session) -> ReadOnlyCredentials:
+    iam = session.client('iam')
+    sts = session.client('sts')
+    policy = {"Version": "2012-10-17", "Statement": [{"Action": "*", "Effect": "Allow", "Resource": "*"}]}
+    try:
+        user = iam.get_user()
+        r = sts.get_federation_token(Name=user['User']['UserName'], DurationSeconds=setting.ROLE_DURATION, Policy=json.dumps(policy))
+        c = r['Credentials']
+        return ReadOnlyCredentials(access_key=c['AccessKeyId'], secret_key=c['SecretAccessKey'], token=c['SessionToken'])
+    except ClientError as e:
+        fatal('failed to get federation token, %s', e)
 
 def open_aws_console(profile: str):
     """
     opens the AWS console for the specified profile.
     """
-    c: ReadOnlyCredentials = Session(profile_name=profile).get_credentials().get_frozen_credentials()
+    s: Session = Session(profile_name=profile)
+    c: ReadOnlyCredentials = s.get_credentials().get_frozen_credentials()
+    if not c.token:
+        logging.debug('getting federated credentials')
+        c = get_federated_credentials(s)
+
     if not c.token:
         fatal('cannot generated a console signin URL from credentials without a session token')
 
     creds = {'sessionId': c.access_key, 'sessionKey': c.secret_key, 'sessionToken': c.token}
     logging.debug('obtaining AWS console signin token')
     response = requests.get("https://signin.aws.amazon.com/federation",
-                            params={'Action': 'getSigninToken', 'SessionDuration': setting.ROLE_DURATION,
-                                    'Session': json.dumps(creds)})
+                            params={'Action': 'getSigninToken',
+                                    'SessionType': 'json', 'Session': json.dumps(creds)})
     if response.status_code != 200:
-        fatal("could not generate Console signin URL, %s", response.status_code)
+        fatal("could not generate Console signin URL, %s,\n%s", response.status_code, response.text)
 
     signin_token = response.json()['SigninToken']
     params = {'Action': 'login', 'Issuer': 'awslogin', 'Destination': 'https://console.aws.amazon.com/',
@@ -49,10 +67,10 @@ def open_aws_console(profile: str):
     prepared_link = console.prepare()
     webbrowser.open(prepared_link.url)
 
+
 @click.command('aws-console', help='open AWS console from profile')
 @click.option('--verbose', is_flag=True, default=False, help=' for tracing purposes')
 @click.option('--profile', required=True, help='to store the credentials under')
 def main(verbose, profile):
     logging.basicConfig(format='%(levelname)s:%(message)s', level=(logging.DEBUG if verbose else logging.INFO))
     open_aws_console(profile)
-
