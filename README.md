@@ -1,5 +1,6 @@
 # auth0-login
-CLI to obtain JWT, SAML tokens, and AWS credentials using Auth0, OAuth and SAML.
+
+This is a fork of https://github.com/binxio/auth0-login, a CLI to obtain JWT, SAML tokens, and AWS credentials using Auth0, OAuth and SAML. In this fork I've added configuration for [PyInstaller](https://www.pyinstaller.org/) so an executable can be distributed without requiring Python on the host machine. See [Create release artifact for saml-login](https://github.com/depop/auth0-login#create-release-artifact-for-saml-login) for instructions on how to build an executable with PyInstaller.
 
 ## AWS access keys through Auth0 SAML support
 [Auth0](https://auth0.com/docs/integrations/aws) can be configured as the identity provider for the AWS, allowing your Auth0 users
@@ -97,6 +98,20 @@ or using the credentials obtained earlier:
 ```
 $ aws-console --profile OAuthAdministrator@aws-alias 
 ```
+
+## Create release artifact for saml-login
+
+Requires [PyInstaller](https://www.pyinstaller.org/).
+
+```bash
+pyinstaller saml_pyinstaller.py --name saml-login --onefile
+cp -r dist/ saml-login-v0.6.0-macos
+zip -r saml-login-v0.6.0-macos.zip saml-login-v0.6.0-macos
+```
+
+Where v0.6.0 should be replaced with the correct release tag.
+
+Now create a release in GitHub and upload the zip as a release artifact.
 
 ## Conclusion
 With the command line utility, you can have SSO *and* temporary access keys for AWS using Auth0!
