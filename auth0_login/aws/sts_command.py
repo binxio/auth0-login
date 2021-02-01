@@ -48,7 +48,7 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
 
         self.role = role if role else setting.attributes.get('aws_role')
         self.profile = profile if profile else setting.attributes.get('aws_profile')
-        self.policy_arns = policy_arns if policy_arns else setting.attributes.get('policy_arns', None)
+        self.policy_arns = policy_arns if policy_arns else string_to_list(setting.attributes.get('policy_arns', None))
         self.policy = inline_policy if inline_policy else setting.attributes.get('inline_policy', None)
         self.open_console = setting.attributes.get('aws_console', False)
         self.saml_response: AWSSAMLAssertion = None
@@ -93,6 +93,8 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
         if self.open_console:
             open_aws_console(self.profile)
 
+def string_to_list(value):
+    return list(filter(lambda s: s, map(lambda s: s.strip(), value.split("\n")))) if value else None
 
 @click.command('aws-assume-role', help=AWSSTSGetCredentialsFromSAMLCommand.__doc__)
 @click.option('--account', help='aws account number or alias')
