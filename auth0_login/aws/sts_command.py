@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from sys import stdout
+from sys import stdout, stderr
 
 import click
+import json
 
 from auth0_login import fatal, setting
 from auth0_login.aws.console import open_aws_console
@@ -39,7 +40,7 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
     By specifying `--open-console` it will open the AWS console too.
     """
 
-    def __init__(self, account, role, profile):
+    def __init__(self, account, role, profile, policy_arns = None, inline_policy = None):
         super(AWSSTSGetCredentialsFromSAMLCommand, self).__init__()
         self.account = account if account else setting.attributes.get('aws_account')
         if not account and self.account:
@@ -47,8 +48,18 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
 
         self.role = role if role else setting.attributes.get('aws_role')
         self.profile = profile if profile else setting.attributes.get('aws_profile')
+        self.policy_arns = policy_arns if policy_arns else setting.attributes.get('policy_arns', None)
+        self.policy = inline_policy if inline_policy else setting.attributes.get('inline_policy', None)
         self.open_console = setting.attributes.get('aws_console', False)
         self.saml_response: AWSSAMLAssertion = None
+        if self.policy:
+            try:
+                p = json.loads(self.policy)
+            except Exception as e:
+                stderr.write(f"ERROR: policy is invalid json, {e}\n")
+                exit(1)
+
+
 
     def set_saml_response(self, saml_response):
         self.saml_response = AWSSAMLAssertion(saml_response)
@@ -77,7 +88,7 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
 
         self.request_authorization()
 
-        credentials = self.saml_response.assume_role(self.role_arn, setting.ROLE_DURATION)
+        credentials = self.saml_response.assume_role(self.role_arn, setting.ROLE_DURATION, self.policy_arns, self.policy)
         write_aws_credentials(credentials, self.profile)
         if self.open_console:
             open_aws_console(self.profile)
@@ -87,12 +98,14 @@ class AWSSTSGetCredentialsFromSAMLCommand(SAMLGetAccessTokenCommand):
 @click.option('--account', help='aws account number or alias')
 @click.option('--role', help='to assume using the token')
 @click.option('--profile', help='to store the credentials under')
+@click.option('--policy-arn', multiple=True, help='to use in the session')
+@click.option('--inline-policy', help='to use in the session')
 @click.option('--show', is_flag=True, default=False, help='account roles available to assume')
 @click.option('--open-console', '-C', count=True, help=' after credential refresh')
-def assume_role_with_saml(account, role, profile, show, open_console):
+def assume_role_with_saml(account, role, profile, show, open_console, policy_arn, inline_policy):
 
     aws_account = aws_accounts.get_account(account).number if account else None
-    cmd = AWSSTSGetCredentialsFromSAMLCommand(aws_account, role, profile)
+    cmd = AWSSTSGetCredentialsFromSAMLCommand(aws_account, role, profile, policy_arn, inline_policy)
     if show:
         cmd.show_account_roles()
     else:

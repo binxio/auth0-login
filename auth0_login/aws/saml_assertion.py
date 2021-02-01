@@ -99,19 +99,24 @@ class AWSSAMLAssertion(object):
                 fatal('expected a role arn, found %s', role)
         return result
 
-    def assume_role(self, role_arn: str, duration: int = 3600) -> AWSCredentials:
+    def assume_role(self, role_arn: str, duration: int = 3600, policy_arns = None, inline_policy = None) -> AWSCredentials:
         if not role_arn or role_arn not in self.roles:
             available_roles = ', '.join(self.roles.keys())
             fatal(f'Role {role_arn} not granted, choose one of {available_roles}')
 
         sts = boto3.client('sts')
         try:
-            response = sts.assume_role_with_saml(
-                RoleArn=role_arn,
-                PrincipalArn=self.roles[role_arn],
-                SAMLAssertion=self.saml_response,
-                DurationSeconds=duration
-            )
+            kwargs = { "RoleArn": role_arn,
+                "PrincipalArn": self.roles[role_arn],
+                "SAMLAssertion": self.saml_response,
+                "DurationSeconds": duration,
+            }
+            if inline_policy:
+                kwargs["Policy"] = inline_policy
+            if policy_arns:
+                kwargs["PolicyArns"] = [{"arn": arn} for arn in policy_arns]
+
+            response = sts.assume_role_with_saml(**kwargs)
         except ClientError as e:
             fatal('failed to assume role {role_arn}, %s', e)
 
